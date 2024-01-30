@@ -65,7 +65,7 @@ pub fn get_all(config: &MindmapConfig) -> Result<Vec<EmbeddedSentence>> {
     Ok(rows)
 }
 
-pub fn insert_all(embs: &Vec<EmbeddedSentence>, config: &MindmapConfig) -> Result<()> {
+pub fn insert_many(embs: &Vec<EmbeddedSentence>, config: &MindmapConfig) -> Result<()> {
     let mut conn = Connection::open(&config.db_path)?;
     let tx = conn.transaction()?;
     for emb in embs {
@@ -74,17 +74,6 @@ pub fn insert_all(embs: &Vec<EmbeddedSentence>, config: &MindmapConfig) -> Resul
             rusqlite::params![emb.path.to_str(), emb.start_line_no, emb.end_line_no, f32_to_u8(&emb.embedding)],
         )?;
     }
-    tx.commit()?;
-    Ok(())
-}
-
-pub fn insert(emb: &EmbeddedSentence, config: &MindmapConfig) -> Result<()> {
-    let mut conn = Connection::open(&config.db_path)?;
-    let tx = conn.transaction()?;
-    tx.execute(
-        "INSERT INTO sentences (path, start_line_no, end_line_no, embedding) VALUES (?1, ?2, ?3, ?4)",
-        rusqlite::params![emb.path.to_str(), emb.start_line_no, emb.end_line_no, f32_to_u8(&emb.embedding)],
-    )?;
     tx.commit()?;
     Ok(())
 }

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use mindmap::{config::MindmapConfig, database, embeddings::Model, files};
+use mindmap::{config::MindmapConfig, database, embeddings::Model, files, search};
 
 use clap::{Parser, Subcommand};
 
@@ -56,7 +56,10 @@ fn main() -> anyhow::Result<()> {
             files::recompute_file(file, &config)?;
         }
         Command::Query { query } => {
-            println!("Querying for: {:?}", query)
+            println!("Querying for: {:?}", query);
+            let corpus = database::get_all(&config)?;
+            let tree = search::Tree::new(corpus, config);
+            tree.search(query);
         }
         Command::Embed { sentence } => {
             let model = Model::new(&config.model)?;
