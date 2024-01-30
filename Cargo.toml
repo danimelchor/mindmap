@@ -8,14 +8,13 @@ authors = ["Daniel Melchor <dmh672@gmail.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+acap = "0.3.0"
 anyhow = "1.0.79"
 clap = { version = "4.4.18", features = ["derive"] }
 config = "0.13.4"
-kd-tree = "0.5.3"
 markdown = "1.0.0-alpha.16"
 rusqlite = "0.30.0"
 rust-bert = "0.22.0"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_yaml = "0.9.31"
-typenum = "1.17.0"
 walkdir = "2.4.0"
