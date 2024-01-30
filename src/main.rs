@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use mindmap::{config, embeddings::Model};
+use mindmap::{config::MindmapConfig, database, embeddings::Model, files};
 
 use clap::{Parser, Subcommand};
 
@@ -40,24 +40,26 @@ enum Command {
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    let config = config::get_config();
-    println!("{:?}", config);
+    let config = MindmapConfig::load();
+    database::start(&config)?;
 
     match &cli.command {
         Command::Watch => {
-            println!("Watching files...")
+            println!("Watching files...");
         }
         Command::RecomputeAll => {
-            println!("Recomputing all files...")
+            println!("Recomputing all files...");
+            files::recompute_all(&config)?;
         }
         Command::RecomputeFile { file } => {
-            println!("Recomputing file: {:?}", file)
+            println!("Recomputing file: {:?}", file);
+            files::recompute_file(file, &config)?;
         }
         Command::Query { query } => {
             println!("Querying for: {:?}", query)
         }
         Command::Embed { sentence } => {
-            let model = Model::new()?;
+            let model = Model::new(&config.model)?;
             let emb = model.encode(sentence)?;
             print!("{:?}", emb)
         }
