@@ -1,4 +1,5 @@
 use rusqlite::Connection;
+use rust_bert::pipelines::sentence_embeddings::Embedding;
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -10,7 +11,7 @@ pub struct EmbeddedSentence {
     pub path: PathBuf,
     pub start_line_no: usize,
     pub end_line_no: usize,
-    pub embedding: Vec<f32>,
+    pub embedding: Embedding,
 }
 
 pub fn start(config: &MindmapConfig) -> Result<()> {
@@ -28,7 +29,7 @@ pub fn start(config: &MindmapConfig) -> Result<()> {
     Ok(())
 }
 
-pub fn u8_to_f32(bytes: &Vec<u8>) -> Vec<f32> {
+fn u8_to_f32(bytes: &Vec<u8>) -> Vec<f32> {
     bytes
         .chunks_exact(4)
         .map(TryInto::try_into)
@@ -37,7 +38,7 @@ pub fn u8_to_f32(bytes: &Vec<u8>) -> Vec<f32> {
         .collect()
 }
 
-pub fn f32_to_u8(floats: &Vec<f32>) -> Vec<u8> {
+fn f32_to_u8(floats: &Vec<f32>) -> Vec<u8> {
     floats.iter().map(|f| f.to_le_bytes()).flatten().collect()
 }
 
@@ -68,6 +69,10 @@ pub fn get_all(config: &MindmapConfig) -> Result<Vec<EmbeddedSentence>> {
 pub fn insert_many(embs: &Vec<EmbeddedSentence>, config: &MindmapConfig) -> Result<()> {
     let mut conn = Connection::open(&config.db_path)?;
     let tx = conn.transaction()?;
+    tx.execute(
+        "DELETE FROM sentences WHERE path = ?1",
+        rusqlite::params![embs[0].path.to_str()],
+    )?;
     for emb in embs {
         tx.execute(
             "INSERT INTO sentences (path, start_line_no, end_line_no, embedding) VALUES (?1, ?2, ?3, ?4)",
@@ -75,5 +80,14 @@ pub fn insert_many(embs: &Vec<EmbeddedSentence>, config: &MindmapConfig) -> Resu
         )?;
     }
     tx.commit()?;
+    Ok(())
+}
+
+pub fn delete_file(file: &PathBuf, config: &MindmapConfig) -> Result<()> {
+    let conn = Connection::open(&config.db_path)?;
+    conn.execute(
+        "DELETE FROM sentences WHERE path = ?1",
+        rusqlite::params![file.to_str()],
+    )?;
     Ok(())
 }

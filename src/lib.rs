@@ -2,4 +2,6 @@ pub mod config;
 pub mod database;
 pub mod embeddings;
 pub mod files;
+pub mod formatter;
 pub mod search;
+pub mod watcher;

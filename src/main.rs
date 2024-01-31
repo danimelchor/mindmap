@@ -1,14 +1,22 @@
 use std::path::PathBuf;
 
-use mindmap::{config::MindmapConfig, database, embeddings::Model, files, search};
+use mindmap::{config::MindmapConfig, database, files, formatter, search, watcher::MindmapWatcher};
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 
 #[derive(Parser)]
 #[command(author, version, about)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum OutputFormat {
+    /// List format
+    List,
+    /// Raw format
+    Raw,
 }
 
 #[derive(Subcommand)]
@@ -29,12 +37,10 @@ enum Command {
     Query {
         /// The idea to search for
         query: String,
-    },
 
-    /// Prints the embeddings for a sentence
-    Embed {
-        /// The string to embed
-        sentence: String,
+        /// The output format
+        #[arg(value_enum, short, long, default_value = "list")]
+        format: OutputFormat,
     },
 }
 
@@ -45,7 +51,8 @@ fn main() -> anyhow::Result<()> {
 
     match &cli.command {
         Command::Watch => {
-            println!("Watching files...");
+            let mut mm_watcher = MindmapWatcher::new(config);
+            mm_watcher.watch()?;
         }
         Command::RecomputeAll => {
             println!("Recomputing all files...");
@@ -55,16 +62,16 @@ fn main() -> anyhow::Result<()> {
             println!("Recomputing file: {:?}", file);
             files::recompute_file(file, &config)?;
         }
-        Command::Query { query } => {
+        Command::Query { query, format } => {
             println!("Querying for: {:?}", query);
             let corpus = database::get_all(&config)?;
             let tree = search::Tree::new(corpus, config);
-            tree.search(query);
-        }
-        Command::Embed { sentence } => {
-            let model = Model::new(&config.model)?;
-            let emb = model.encode(sentence)?;
-            print!("{:?}", emb)
+            let results = tree.search(query);
+            let formatted = match format {
+                OutputFormat::List => formatter::list(&results),
+                OutputFormat::Raw => formatter::raw(&results),
+            };
+            println!("{}", formatted);
         }
     }
 

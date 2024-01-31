@@ -10,20 +10,13 @@ pub struct MindmapConfig {
     pub data_dir: PathBuf,
     pub db_path: PathBuf,
     pub log_path: PathBuf,
+    pub lock_path: PathBuf,
     pub min_score: f32,
     pub model: ModelType,
     pub topk: usize,
 }
 
 impl MindmapConfig {
-    #[cfg(target_os = "windows")]
-    pub fn get_home_dir() -> Option<PathBuf> {
-        let home = env::var_os("HOME")?;
-        let path = PathBuf::from(home);
-        Some(path)
-    }
-
-    #[cfg(not(target_os = "windows"))]
     pub fn get_home_dir() -> Option<PathBuf> {
         let home = env::var_os("HOME")?;
         let path = PathBuf::from(home);
@@ -44,6 +37,7 @@ impl MindmapConfig {
             data_dir: home.join("mindmap"),
             db_path: config.join("mindmap.db"),
             log_path: config.join("mindmap.log"),
+            lock_path: home.join(".mindmap.lock"),
             min_score: 0.2,
             model: ModelType::AllMiniLmL12V2,
             topk: 10,

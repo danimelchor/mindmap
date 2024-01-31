@@ -54,7 +54,6 @@ pub fn _compute_file(file: &PathBuf, model: &Model) -> Result<Vec<EmbeddedSenten
         let start = &pos.start.line;
         let end = &pos.end.line;
         let content = child.to_string();
-        println!("Content: {:?}", content);
         let emb = model.encode(&content)?;
 
         Ok(EmbeddedSentence {
@@ -67,4 +66,9 @@ pub fn _compute_file(file: &PathBuf, model: &Model) -> Result<Vec<EmbeddedSenten
 
     let embs = embs.collect::<Result<Vec<_>>>()?;
     Ok(embs)
+}
+
+pub fn delete_file(file: &PathBuf, config: &MindmapConfig) -> Result<()> {
+    database::delete_file(file, config)?;
+    Ok(())
 }
