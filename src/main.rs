@@ -63,7 +63,6 @@ fn main() -> anyhow::Result<()> {
             files::recompute_file(file, &config)?;
         }
         Command::Query { query, format } => {
-            println!("Querying for: {:?}", query);
             let corpus = database::get_all(&config)?;
             let tree = search::Tree::new(corpus, config);
             let results = tree.search(query);
