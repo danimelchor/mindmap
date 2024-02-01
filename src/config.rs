@@ -6,6 +6,12 @@ use std::{env, fs::OpenOptions, io::Write, path::PathBuf};
 use crate::embeddings::ModelType;
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct ServerConfig {
+    pub host: String,
+    pub port: u16,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct MindmapConfig {
     pub data_dir: PathBuf,
     pub db_path: PathBuf,
@@ -14,6 +20,7 @@ pub struct MindmapConfig {
     pub min_score: f32,
     pub model: ModelType,
     pub topk: usize,
+    pub server: ServerConfig,
 }
 
 impl MindmapConfig {
@@ -41,6 +48,10 @@ impl MindmapConfig {
             min_score: 0.2,
             model: ModelType::AllMiniLmL12V2,
             topk: 10,
+            server: ServerConfig {
+                host: "127.0.0.1".to_string(),
+                port: 5001,
+            },
         };
         mindmap_config.save().expect("Config should save");
         mindmap_config

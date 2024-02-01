@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
-use mindmap::{config::MindmapConfig, database, files, formatter, search, watcher::MindmapWatcher};
+use mindmap::{
+    config::MindmapConfig, database, files, formatter, search, server, watcher::MindmapWatcher,
+};
 
 use clap::{Parser, Subcommand, ValueEnum};
 
@@ -42,6 +44,9 @@ enum Command {
         #[arg(value_enum, short, long, default_value = "list")]
         format: OutputFormat,
     },
+
+    /// Starts the MindMap server
+    Server,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -63,14 +68,15 @@ fn main() -> anyhow::Result<()> {
             files::recompute_file(file, &config)?;
         }
         Command::Query { query, format } => {
-            let corpus = database::get_all(&config)?;
-            let tree = search::Tree::new(corpus, config);
-            let results = tree.search(query);
+            let results = search::search(&query, &config)?;
             let formatted = match format {
                 OutputFormat::List => formatter::list(&results),
                 OutputFormat::Raw => formatter::raw(&results),
             };
             println!("{}", formatted);
+        }
+        Command::Server => {
+            server::start(config)?;
         }
     }
 
