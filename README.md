@@ -72,6 +72,33 @@ There are a few models to choose from. The models are:
 - ParaphraseAlbertSmallV2
 - SentenceT5Base
 
+## Server
+
+Despite supporting individual queries with `midnmap query`, MindMap also supports a server mode. The server mode is useful for integrating MindMap with other tools, and it's
+also much faster than the CLI mode since it will load the model only once and keep it in memory. To use the server, simply run `mindmap server` and it will start listening on
+the address specified in the configuration file:
+```
+$ mindmap server
+Starting server at: 127.0.0.1:5001
+```
+
+Then, to communicate with the server just make a GET request to the root path with a query parameter `q`:
+```
+$ curl -G --data-urlencode "q=are boats cool?" http://127.0.0.1:5001/
+~/mindmap/test.md:5:5
+~/mindmap/test.md:3:3
+~/mindmap/test.md:1:1
+~/mindmap/other_data.md:16:17
+~/mindmap/other_data.md:48:48
+~/mindmap/other_data.md:59:64
+~/mindmap/other_data.md:43:43
+~/mindmap/other_data.md:31:32
+~/mindmap/other_data.md:41:41
+~/mindmap/other_data.md:57:57
+```
+
+The list of files returned will be in the format `file_path:line_number:column_number`.
+
 ## Recommended additional tools
 
 [mindmap.nvim](https://github.com/danimelchor/mindmap.nvim) is a Neovim plugin that allows you to quickly search and edit your MindMap notes.
