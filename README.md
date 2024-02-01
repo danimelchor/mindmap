@@ -10,8 +10,8 @@ cargo install mindmap
 
 ## Usage
 
-```bash
-mindmap --help
+```
+$ mindmap --help
 Search your notes at the speed of thought
 
 Usage: mindmap <COMMAND>
