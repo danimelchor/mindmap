@@ -1,10 +1,10 @@
-use std::path::PathBuf;
-
+use clap::{Parser, Subcommand, ValueEnum};
+use colored::Colorize;
+use log::LevelFilter;
 use mindmap::{
     config::MindmapConfig, database, files, formatter, search, server, watcher::MindmapWatcher,
 };
-
-use clap::{Parser, Subcommand, ValueEnum};
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -50,24 +50,33 @@ enum Command {
 }
 
 fn main() -> anyhow::Result<()> {
-    let cli = Cli::parse();
     let config = MindmapConfig::load();
+    simple_logging::log_to_file(&config.log_path, LevelFilter::Info).unwrap();
+    log::debug!("Loaded config");
+
+    let cli = Cli::parse();
+
+    log::info!("Connecting to database");
     database::start(&config)?;
 
     match &cli.command {
         Command::Watch => {
+            log::info!("Starting watcher");
             let mut mm_watcher = MindmapWatcher::new(config);
             mm_watcher.watch()?;
         }
         Command::RecomputeAll => {
-            println!("Recomputing all files...");
+            log::info!("Recomputing all files");
+            println!("{}", "Recomputing all files...".blue());
             files::recompute_all(&config)?;
         }
         Command::RecomputeFile { file } => {
-            println!("Recomputing file: {:?}", file);
+            log::info!("Recomputing file: {:?}", file);
+            println!("{}: {:?}", "Recomputing file".blue(), file);
             files::recompute_file(file, &config)?;
         }
         Command::Query { query, format } => {
+            log::info!("Searching for: {}", query);
             let results = search::search(&query, &config)?;
             let formatted = match format {
                 OutputFormat::List => formatter::list(&results),

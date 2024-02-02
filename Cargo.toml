@@ -11,9 +11,11 @@ authors = ["Daniel Melchor <dmh672@gmail.com>"]
 acap = "0.3.0"
 anyhow = "1.0.79"
 clap = { version = "4.4.18", features = ["derive"] }
+colored = "2.1.0"
 config = "0.13.4"
 fs2 = "0.4.3"
 httparse = "1.8.0"
+log = "0.4.20"
 markdown = "1.0.0-alpha.16"
 notify = "6.1.1"
 rusqlite = "0.30.0"
@@ -21,4 +23,6 @@ rust-bert = "0.22.0"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_yaml = "0.9.31"
 signal-hook = "0.3.17"
+simple-logging = "2.0.2"
+url = "2.5.0"
 walkdir = "2.4.0"

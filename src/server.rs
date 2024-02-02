@@ -6,10 +6,13 @@ use crate::{
     search::{self},
 };
 use anyhow::Result;
+use colored::Colorize;
 use std::{
+    collections::HashMap,
     io::{Read, Write},
     net::{TcpListener, TcpStream},
 };
+use url::Url;
 
 fn handle_stream(stream: &mut TcpStream, model: &Model, config: &MindmapConfig) -> Result<String> {
     // Read stream using httparse
@@ -21,22 +24,11 @@ fn handle_stream(stream: &mut TcpStream, model: &Model, config: &MindmapConfig) 
 
     // Extract path and query params
     let path = req.path.ok_or(anyhow::anyhow!("No path in request"))?;
-    let query_str = path
-        .split_once("?")
-        .ok_or(anyhow::anyhow!("No query in path"))?
-        .1;
-    let query_params: Vec<(&str, &str)> = query_str
-        .split("&")
-        .map(|qp| qp.split_once("="))
-        .filter_map(|x| x)
-        .filter(|(k, _)| *k == "q")
-        .collect();
-
-    if query_params.len() != 1 {
-        return Err(anyhow::anyhow!("Missing query parameter q"));
-    }
-    let query = query_params[0].1;
-    println!("Searching for '{}'", query);
+    let parsed_url = Url::parse(&format!("http://localhost{}", path))?;
+    let hash_query: HashMap<_, _> = parsed_url.query_pairs().into_owned().collect();
+    let query = hash_query
+        .get("q")
+        .ok_or(anyhow::anyhow!("No query in request"))?;
 
     // Process query
     let corpus = database::get_all(&config)?;
@@ -62,12 +54,16 @@ pub fn start(config: MindmapConfig) -> Result<()> {
     let host = &config.server.host;
     let port = &config.server.port;
     let addr = format!("{}:{}", host, port);
+    log::info!("Starting server at {}", addr);
 
     // Load model
+    log::info!("Loading model: {:?}", config.model);
+    println!("{}: {:?}", "Loading model".blue(), &config.model);
     let model = Model::new(&config.model)?;
 
     // Start app
-    println!("Starting server at: {}", addr);
+    log::info!("Starting server at {}", addr);
+    println!("{}: {}", "Starting server at".blue(), addr);
     let listener = TcpListener::bind(addr)?;
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
