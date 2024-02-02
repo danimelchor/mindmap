@@ -37,6 +37,7 @@ fn handle_stream(
 
     // Process query
     let corpus = database::get_all(&config)?;
+    // let embeddings = corpus.iter().map(|x| x.embedding).collect();
     let results = search::encode_and_search(&model, &corpus, &query.to_string(), config.topk);
 
     // Format response

@@ -69,10 +69,6 @@ pub fn get_all(config: &MindmapConfig) -> Result<Vec<EmbeddedSentence>> {
 pub fn insert_many(embs: &Vec<EmbeddedSentence>, config: &MindmapConfig) -> Result<()> {
     let mut conn = Connection::open(&config.db_path)?;
     let tx = conn.transaction()?;
-    tx.execute(
-        "DELETE FROM sentences WHERE path = ?1",
-        rusqlite::params![embs[0].path.to_str()],
-    )?;
     for emb in embs {
         tx.execute(
             "INSERT INTO sentences (path, start_line_no, end_line_no, embedding) VALUES (?1, ?2, ?3, ?4)",
@@ -80,6 +76,12 @@ pub fn insert_many(embs: &Vec<EmbeddedSentence>, config: &MindmapConfig) -> Resu
         )?;
     }
     tx.commit()?;
+    Ok(())
+}
+
+pub fn delete_all(config: &MindmapConfig) -> Result<()> {
+    let conn = Connection::open(&config.db_path)?;
+    conn.execute("DELETE FROM sentences", [])?;
     Ok(())
 }
 

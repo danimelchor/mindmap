@@ -1,7 +1,11 @@
 use std::path::PathBuf;
 
-use acap::{cos::angular_distance, Distance};
+use acap::{
+    cos::{angular_distance, cosine_distance},
+    Distance,
+};
 use anyhow::Result;
+use rust_bert::pipelines::sentence_embeddings::Embedding;
 use serde::Serialize;
 
 use crate::{
@@ -27,7 +31,9 @@ pub fn encode_and_search(
 ) -> Vec<SearchResult> {
     let emb = model.encode(query).expect("Failed to encode query");
 
-    let corpus_emb = corpus
+    // let cos_sims = cosine_distance(&emb, &corpus);
+
+    let mut cos_sims = corpus
         .iter()
         .map(|x| {
             let dist = angular_distance(&emb, &x.embedding);
@@ -36,10 +42,9 @@ pub fn encode_and_search(
         .collect::<Vec<_>>();
 
     // Sort
-    let mut nearests = corpus_emb;
-    nearests.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-    nearests
-        .iter()
+    cos_sims.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    cos_sims
+        .into_iter()
         .map(|(x, dist)| SearchResult {
             path: x.path.clone(),
             start_line_no: x.start_line_no,
@@ -52,6 +57,9 @@ pub fn encode_and_search(
 
 pub fn search(query: &String, config: &MindmapConfig, formatter: &Formatter) -> Result<()> {
     let corpus = database::get_all(config)?;
+    // TODO: optimize cos similarity
+    // let embeddings = corpus.iter().map(|x| x.embedding).collect::<Vec<_>>();
+
     let model = Model::new(&config.model).unwrap();
     let results = encode_and_search(&model, &corpus, query, config.topk);
 

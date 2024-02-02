@@ -27,6 +27,7 @@ pub fn recompute_all(config: &MindmapConfig) -> Result<()> {
             embs.extend(emb);
         }
     }
+    database::delete_all(&config);
     database::insert_many(&embs, &config)?;
     Ok(())
 }
@@ -34,6 +35,7 @@ pub fn recompute_all(config: &MindmapConfig) -> Result<()> {
 pub fn recompute_file(file: &PathBuf, config: &MindmapConfig) -> Result<()> {
     let model = Model::new(&config.model)?;
     let emb = _compute_file(file, &model)?;
+    database::delete_file(file, config)?;
     database::insert_many(&emb, &config)?;
     Ok(())
 }
