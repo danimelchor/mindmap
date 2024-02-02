@@ -2,14 +2,16 @@ use std::path::PathBuf;
 
 use acap::{cos::angular_distance, Distance};
 use anyhow::Result;
+use serde::Serialize;
 
 use crate::{
     config::MindmapConfig,
     database::{self, EmbeddedSentence},
     embeddings::Model,
+    formatter::Formatter,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct SearchResult {
     pub path: PathBuf,
     pub start_line_no: usize,
@@ -48,9 +50,13 @@ pub fn encode_and_search(
         .collect()
 }
 
-pub fn search(query: &String, config: &MindmapConfig) -> Result<Vec<SearchResult>> {
+pub fn search(query: &String, config: &MindmapConfig, formatter: &Formatter) -> Result<()> {
     let corpus = database::get_all(config)?;
     let model = Model::new(&config.model).unwrap();
     let results = encode_and_search(&model, &corpus, query, config.topk);
-    Ok(results)
+
+    // Format response
+    let formatted = formatter.format(&results);
+    println!("{}", formatted);
+    Ok(())
 }

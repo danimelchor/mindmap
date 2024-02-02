@@ -1,8 +1,12 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
 use colored::Colorize;
 use log::LevelFilter;
 use mindmap::{
-    config::MindmapConfig, database, files, formatter, search, server, watcher::MindmapWatcher,
+    config::MindmapConfig,
+    database, files,
+    formatter::{Formatter, OutputFormat},
+    search, server,
+    watcher::MindmapWatcher,
 };
 use std::path::PathBuf;
 
@@ -11,14 +15,6 @@ use std::path::PathBuf;
 struct Cli {
     #[command(subcommand)]
     command: Command,
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-enum OutputFormat {
-    /// List format
-    List,
-    /// Raw format
-    Raw,
 }
 
 #[derive(Subcommand)]
@@ -46,7 +42,11 @@ enum Command {
     },
 
     /// Starts the MindMap server
-    Server,
+    Server {
+        /// The output format
+        #[arg(value_enum, short, long, default_value = "raw")]
+        format: OutputFormat,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -59,7 +59,7 @@ fn main() -> anyhow::Result<()> {
     log::info!("Connecting to database");
     database::start(&config)?;
 
-    match &cli.command {
+    match cli.command {
         Command::Watch => {
             log::info!("Starting watcher");
             let mut mm_watcher = MindmapWatcher::new(config);
@@ -73,19 +73,16 @@ fn main() -> anyhow::Result<()> {
         Command::RecomputeFile { file } => {
             log::info!("Recomputing file: {:?}", file);
             println!("{}: {:?}", "Recomputing file".blue(), file);
-            files::recompute_file(file, &config)?;
+            files::recompute_file(&file, &config)?;
         }
         Command::Query { query, format } => {
             log::info!("Searching for: {}", query);
-            let results = search::search(&query, &config)?;
-            let formatted = match format {
-                OutputFormat::List => formatter::list(&results),
-                OutputFormat::Raw => formatter::raw(&results),
-            };
-            println!("{}", formatted);
+            let formatter = Formatter::new(format);
+            search::search(&query, &config, &formatter)?;
         }
-        Command::Server => {
-            server::start(config)?;
+        Command::Server { format } => {
+            let formatter = Formatter::new(format);
+            server::start(&config, &formatter)?;
         }
     }
 

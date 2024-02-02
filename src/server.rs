@@ -2,7 +2,7 @@ use crate::{
     config::MindmapConfig,
     database,
     embeddings::Model,
-    formatter,
+    formatter::Formatter,
     search::{self},
 };
 use anyhow::Result;
@@ -14,8 +14,13 @@ use std::{
 };
 use url::Url;
 
-fn handle_stream(stream: &mut TcpStream, model: &Model, config: &MindmapConfig) -> Result<String> {
-    // Read stream using httparse
+fn handle_stream(
+    stream: &mut TcpStream,
+    model: &Model,
+    config: &MindmapConfig,
+    formatter: &Formatter,
+) -> Result<String> {
+    // Read and parse stream HTTP req
     let buf = &mut [0; 1024];
     stream.read(buf)?;
     let mut headers = [httparse::EMPTY_HEADER; 16];
@@ -35,7 +40,7 @@ fn handle_stream(stream: &mut TcpStream, model: &Model, config: &MindmapConfig) 
     let results = search::encode_and_search(&model, &corpus, &query.to_string(), config.topk);
 
     // Format response
-    let formatted = formatter::raw(&results);
+    let formatted = formatter.format(&results);
     Ok(formatted)
 }
 
@@ -49,7 +54,7 @@ pub fn send_response(code: u16, body: &str, stream: &mut TcpStream) -> Result<()
     Ok(())
 }
 
-pub fn start(config: MindmapConfig) -> Result<()> {
+pub fn start(config: &MindmapConfig, formatter: &Formatter) -> Result<()> {
     // Get address
     let host = &config.server.host;
     let port = &config.server.port;
@@ -67,7 +72,7 @@ pub fn start(config: MindmapConfig) -> Result<()> {
     let listener = TcpListener::bind(addr)?;
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
-        let res = handle_stream(&mut stream, &model, &config);
+        let res = handle_stream(&mut stream, &model, &config, &formatter);
         match res {
             Ok(msg) => send_response(200, &msg, &mut stream)?,
             Err(e) => send_response(500, &e.to_string(), &mut stream)?,
