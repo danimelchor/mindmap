@@ -1,11 +1,9 @@
 use std::path::PathBuf;
 
-use acap::{
-    cos::{angular_distance, cosine_distance},
-    Distance,
-};
+use acap::knn::NearestNeighbors;
+use acap::vp::VpTree;
+use acap::{euclidean_distance, Distance, EuclideanDistance, Proximity};
 use anyhow::Result;
-use rust_bert::pipelines::sentence_embeddings::Embedding;
 use serde::Serialize;
 
 use crate::{
@@ -23,45 +21,66 @@ pub struct SearchResult {
     pub distance: f32,
 }
 
-pub fn encode_and_search(
-    model: &Model,
-    corpus: &Vec<EmbeddedSentence>,
-    query: &String,
-    topk: usize,
-) -> Vec<SearchResult> {
-    let emb = model.encode(query).expect("Failed to encode query");
+impl Proximity<EmbeddedSentence> for EmbeddedSentence {
+    type Distance = EuclideanDistance<f32>;
 
-    // let cos_sims = cosine_distance(&emb, &corpus);
+    fn distance(&self, other: &Self) -> Self::Distance {
+        euclidean_distance(&self.embedding, &other.embedding)
+    }
+}
 
-    let mut cos_sims = corpus
-        .iter()
-        .map(|x| {
-            let dist = angular_distance(&emb, &x.embedding);
-            (x, dist)
-        })
-        .collect::<Vec<_>>();
+pub struct EmbeddingTree<'a> {
+    tree: VpTree<EmbeddedSentence>,
+    model: Model,
+    config: &'a MindmapConfig,
+}
 
-    // Sort
-    cos_sims.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-    cos_sims
-        .into_iter()
-        .map(|(x, dist)| SearchResult {
-            path: x.path.clone(),
-            start_line_no: x.start_line_no,
-            end_line_no: x.end_line_no,
-            distance: dist.value(),
-        })
-        .take(topk)
-        .collect()
+impl<'a> EmbeddingTree<'a> {
+    pub fn new(corpus: Vec<EmbeddedSentence>, model: Model, config: &'a MindmapConfig) -> Self {
+        Self {
+            tree: VpTree::balanced(corpus),
+            model,
+            config,
+        }
+    }
+
+    pub fn rebuild(&mut self, corpus: Vec<EmbeddedSentence>) {
+        self.tree = VpTree::balanced(corpus);
+    }
+
+    pub fn search(&self, query: &String) -> Result<Vec<SearchResult>> {
+        let emb = self.model.encode(query)?;
+        let emb_sent = EmbeddedSentence {
+            path: PathBuf::new(),
+            start_line_no: 0,
+            end_line_no: 0,
+            embedding: emb,
+        };
+
+        let topk = self.config.topk;
+
+        let results = self
+            .tree
+            .k_nearest(&emb_sent, topk)
+            .iter()
+            .map(|x| SearchResult {
+                path: x.item.path.clone(),
+                start_line_no: x.item.start_line_no,
+                end_line_no: x.item.end_line_no,
+                distance: x.distance.value(),
+            })
+            .collect();
+
+        Ok(results)
+    }
 }
 
 pub fn search(query: &String, config: &MindmapConfig, formatter: &Formatter) -> Result<()> {
     let corpus = database::get_all(config)?;
-    // TODO: optimize cos similarity
-    // let embeddings = corpus.iter().map(|x| x.embedding).collect::<Vec<_>>();
-
     let model = Model::new(&config.model).unwrap();
-    let results = encode_and_search(&model, &corpus, query, config.topk);
+
+    let tree = EmbeddingTree::new(corpus, model, config);
+    let results = tree.search(query)?;
 
     // Format response
     let formatted = formatter.format(&results);

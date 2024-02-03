@@ -1,9 +1,5 @@
 use crate::{
-    config::MindmapConfig,
-    database,
-    embeddings::Model,
-    formatter::Formatter,
-    search::{self},
+    config::MindmapConfig, database, embeddings::Model, formatter::Formatter, search::EmbeddingTree,
 };
 use anyhow::Result;
 use colored::Colorize;
@@ -16,8 +12,7 @@ use url::Url;
 
 fn handle_stream(
     stream: &mut TcpStream,
-    model: &Model,
-    config: &MindmapConfig,
+    tree: &EmbeddingTree,
     formatter: &Formatter,
 ) -> Result<String> {
     // Read and parse stream HTTP req
@@ -36,9 +31,7 @@ fn handle_stream(
         .ok_or(anyhow::anyhow!("No query in request"))?;
 
     // Process query
-    let corpus = database::get_all(&config)?;
-    // let embeddings = corpus.iter().map(|x| x.embedding).collect();
-    let results = search::encode_and_search(&model, &corpus, &query.to_string(), config.topk);
+    let results = tree.search(&query.to_string())?;
 
     // Format response
     let formatted = formatter.format(&results);
@@ -66,6 +59,8 @@ pub fn start(config: &MindmapConfig, formatter: &Formatter) -> Result<()> {
     log::info!("Loading model: {:?}", config.model);
     println!("{}: {:?}", "Loading model".blue(), &config.model);
     let model = Model::new(&config.model)?;
+    let corpus = database::get_all(&config)?;
+    let tree = EmbeddingTree::new(corpus, model, config);
 
     // Start app
     log::info!("Starting server at {}", addr);
@@ -73,7 +68,7 @@ pub fn start(config: &MindmapConfig, formatter: &Formatter) -> Result<()> {
     let listener = TcpListener::bind(addr)?;
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
-        let res = handle_stream(&mut stream, &model, &config, &formatter);
+        let res = handle_stream(&mut stream, &tree, &formatter);
         match res {
             Ok(msg) => send_response(200, &msg, &mut stream)?,
             Err(e) => send_response(500, &e.to_string(), &mut stream)?,

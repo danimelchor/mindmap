@@ -27,7 +27,7 @@ pub fn recompute_all(config: &MindmapConfig) -> Result<()> {
             embs.extend(emb);
         }
     }
-    database::delete_all(&config);
+    database::delete_all(&config)?;
     database::insert_many(&embs, &config)?;
     Ok(())
 }
