@@ -97,10 +97,15 @@ impl Server {
 
         for stream in listener.incoming() {
             let mut stream = stream.unwrap();
-            let stream_type = Self::parse_request(&mut stream)?;
 
             // Parse stream
-            let res = match stream_type {
+            let stream_type = Self::parse_request(&mut stream);
+            if let Err(err) = stream_type {
+                Self::send_response(400, &err.to_string(), &mut stream)?;
+                continue;
+            }
+
+            let res = match stream_type.unwrap() {
                 RequestType::Search(query) => Self::handle_query(&query, &tree, &formatter),
                 RequestType::Rebuild => Self::handle_rebuild(&mut tree, &config),
             };
