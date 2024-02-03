@@ -48,7 +48,7 @@ impl Server {
         let parsed_url = Url::parse(&format!("http://localhost{}", path))?;
         let hash_query: HashMap<_, _> = parsed_url.query_pairs().into_owned().collect();
         let query = hash_query
-            .get("query")
+            .get("q")
             .ok_or(anyhow::anyhow!("No query in request"))?;
         Ok(RequestType::Search(query.to_string()))
     }
