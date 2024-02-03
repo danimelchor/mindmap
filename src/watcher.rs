@@ -4,6 +4,7 @@ extern crate fs2;
 
 use crate::{config::MindmapConfig, files};
 use anyhow::Result;
+use colored::Colorize;
 use fs2::FileExt;
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use signal_hook::{
@@ -73,7 +74,6 @@ impl MindmapWatcher {
             notify::event::RemoveKind::File => {
                 println!("File removed: {:?}", path);
                 files::delete_file(&path, &self.config)?;
-                println!("> Deleted {:?}", path);
             }
             _ => {}
         }
@@ -116,14 +116,14 @@ impl MindmapWatcher {
 
     pub fn watch(&mut self) -> Result<()> {
         let lock = Self::acquire_lock(&self.config.lock_path)?;
-        println!("Watching files...");
+        println!("{}", "Watching files...".blue());
         self.watcher
             .watch(&self.config.data_dir, RecursiveMode::Recursive)?;
 
         let mut signals = Signals::new(&[SIGINT, SIGTERM])?;
         thread::spawn(move || {
             for _ in signals.forever() {
-                println!("Received signal, exiting");
+                println!("{}", "Received signal, exiting".red());
                 lock.unlock().expect("Failed to unlock");
                 std::process::exit(0);
             }
