@@ -5,7 +5,8 @@ use mindmap::{
     config::MindmapConfig,
     database, files,
     formatter::{Formatter, OutputFormat},
-    search, server,
+    search,
+    server::Server,
     watcher::MindmapWatcher,
 };
 use std::path::PathBuf;
@@ -82,7 +83,7 @@ fn main() -> anyhow::Result<()> {
         }
         Command::Server { format } => {
             let formatter = Formatter::new(format);
-            server::start(&config, &formatter)?;
+            Server::start(&config, &formatter)?;
         }
     }
 

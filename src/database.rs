@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 
-use crate::config::MindmapConfig;
+use crate::{config::MindmapConfig, server};
 
 #[derive(Debug)]
 pub struct EmbeddedSentence {
@@ -76,12 +76,14 @@ pub fn insert_many(embs: &Vec<EmbeddedSentence>, config: &MindmapConfig) -> Resu
         )?;
     }
     tx.commit()?;
+    server::notify_rebuild(config).ok();
     Ok(())
 }
 
 pub fn delete_all(config: &MindmapConfig) -> Result<()> {
     let conn = Connection::open(&config.db_path)?;
     conn.execute("DELETE FROM sentences", [])?;
+    server::notify_rebuild(config).ok();
     Ok(())
 }
 
@@ -91,5 +93,6 @@ pub fn delete_file(file: &PathBuf, config: &MindmapConfig) -> Result<()> {
         "DELETE FROM sentences WHERE path = ?1",
         rusqlite::params![file.to_str()],
     )?;
+    server::notify_rebuild(config).ok();
     Ok(())
 }
