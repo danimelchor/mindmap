@@ -4,9 +4,15 @@ use colored::Colorize;
 use std::fmt::Debug;
 use std::{io::Write, path::PathBuf, str::FromStr};
 
-pub fn prompt<T: Debug + FromStr + Clone>(question: &str, default: &T) -> Result<T> {
+fn prompt<T: Debug + FromStr + Clone>(question: &str, default: &T) -> Result<T> {
     let mut input = String::new();
-    print!("{} [{:?}]: ", question, default);
+    print!(
+        "{} {}{:?}{}: ",
+        question.blue(),
+        "[".blue(),
+        default,
+        "]".blue()
+    );
     std::io::stdout().flush().unwrap();
     std::io::stdin().read_line(&mut input).unwrap();
 
@@ -21,8 +27,25 @@ pub fn prompt<T: Debug + FromStr + Clone>(question: &str, default: &T) -> Result
     })
 }
 
+fn download_model(model_config: &ModelConfig) -> Result<()> {
+    let repo = model_config.model.to_repo();
+    println!("> Downloading model from: {}", repo);
+
+    let mut cmd = std::process::Command::new("git");
+    cmd.arg("clone");
+    cmd.arg(repo);
+    cmd.arg(model_config.get_model_path());
+
+    let output = cmd.output()?;
+    if !output.status.success() {
+        anyhow::bail!("Failed to download model: {:?}", output);
+    }
+
+    Ok(())
+}
+
 pub fn setup() -> Result<()> {
-    println!("{}", "Welcome to the MindMap assistant!".blue());
+    println!("{}", "Welcome to the MindMap assistant!".green());
 
     let def_config = MindmapConfig::default();
 
@@ -53,16 +76,29 @@ pub fn setup() -> Result<()> {
         "Do you want to use a remote model?",
         &def_config.model.remote,
     )?;
-    let local_path = match remote {
+    let model_dir = match remote {
         true => PathBuf::new(),
-        false => prompt("Where is the local model?", &def_config.model.local_path)?,
+        false => prompt(
+            "Where do you want to store the model?",
+            &def_config.model.dir,
+        )?,
     };
+
+    // Download model for them
+    let should_download = prompt("Do you want us automatically download the model?", &true)?;
     let model = ModelConfig {
         model,
         remote,
-        local_path,
+        dir: model_dir,
     };
-    let topk = prompt("How many notes do you want to see?", &def_config.topk)?;
+    if should_download {
+        download_model(&model)?;
+    }
+
+    let topk = prompt(
+        "How many notes do you want to show in search results?",
+        &def_config.topk,
+    )?;
     let server = ServerConfig {
         host: prompt("What host do you want to use?", &def_config.server.host)?,
         port: prompt("What port do you want to use?", &def_config.server.port)?,

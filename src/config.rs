@@ -15,7 +15,15 @@ pub struct ServerConfig {
 pub struct ModelConfig {
     pub model: ModelType,
     pub remote: bool,
-    pub local_path: PathBuf,
+    pub dir: PathBuf,
+}
+
+impl ModelConfig {
+    pub fn get_model_path(&self) -> PathBuf {
+        let dir = &self.dir;
+        let repo_name = self.model.to_repo_name();
+        dir.join(repo_name)
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -83,18 +91,19 @@ impl Default for MindmapConfig {
     fn default() -> Self {
         let home = Self::get_home_dir().expect("Home directory should exist");
         let config = Self::get_config_dir().expect("Config directory should exist");
+        let model = ModelType::AllMiniLmL12V2;
         let mindmap_config = Self {
             data_dir: home.join("notes"),
             db_path: config.join("mindmap.db"),
             log_path: config.join("mindmap.log"),
             lock_path: home.join(".mindmap.lock"),
-            min_score: 0.2,
+            min_score: 0.25,
             model: ModelConfig {
-                model: ModelType::AllMiniLmL12V2,
-                remote: true,
-                local_path: config.join("model/"),
+                model,
+                remote: false,
+                dir: config.join("models/"),
             },
-            topk: 10,
+            topk: 20,
             server: ServerConfig {
                 host: "127.0.0.1".to_string(),
                 port: 5001,

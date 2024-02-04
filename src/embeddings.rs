@@ -51,6 +51,24 @@ impl ModelType {
             SentenceEmbeddingsModelType::SentenceT5Base => ModelType::SentenceT5Base,
         }
     }
+
+    pub fn to_repo_name(&self) -> &str {
+        match self {
+            ModelType::BertBaseNliMeanTokens => "bert-base-nli-mean-tokens",
+            ModelType::DistiluseBaseMultilingualCased => "distiluse-base-multilingual-cased",
+            ModelType::AllMiniLmL12V2 => "all-MiniLM-L12-v2",
+            ModelType::AllMiniLmL6V2 => "all-MiniLM-L6-v2",
+            ModelType::AllDistilrobertaV1 => "all-distilroberta-v1",
+            ModelType::ParaphraseAlbertSmallV2 => "paraphrase-albert-small-v2",
+            ModelType::SentenceT5Base => "sentence-T5-base",
+        }
+    }
+
+    pub fn to_repo(&self) -> String {
+        let base = "https://huggingface.co/sentence-transformers/";
+        let repo = self.to_repo_name();
+        format!("{}{}", base, repo)
+    }
 }
 
 impl FromStr for ModelType {
@@ -82,7 +100,7 @@ impl Model {
             true => SentenceEmbeddingsBuilder::remote(rust_bert_type)
                 .with_device(tch::Device::cuda_if_available())
                 .create_model()?,
-            false => SentenceEmbeddingsBuilder::local(&model_config.local_path)
+            false => SentenceEmbeddingsBuilder::local(&model_config.get_model_path())
                 .with_device(tch::Device::cuda_if_available())
                 .create_model()?,
         };
