@@ -34,7 +34,7 @@ impl Server {
     fn parse_request(stream: &mut TcpStream) -> Result<RequestType> {
         // Read and parse stream HTTP req
         let buf = &mut [0; 1024];
-        stream.read(buf)?;
+        stream.read_exact(buf)?;
         let mut headers = [httparse::EMPTY_HEADER; 16];
         let mut req = httparse::Request::new(&mut headers);
         req.parse(buf)?;
