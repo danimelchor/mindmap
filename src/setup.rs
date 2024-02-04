@@ -95,9 +95,9 @@ pub fn setup() -> Result<()> {
         download_model(&model)?;
     }
 
-    let topk = prompt(
+    let num_results = prompt(
         "How many notes do you want to show in search results?",
-        &def_config.topk,
+        &def_config.num_results,
     )?;
     let server = ServerConfig {
         host: prompt("What host do you want to use?", &def_config.server.host)?,
@@ -111,7 +111,7 @@ pub fn setup() -> Result<()> {
         lock_path,
         min_score,
         model,
-        topk,
+        num_results,
         server,
     };
     config.save()?;

@@ -33,7 +33,7 @@ pub struct MindmapConfig {
     pub log_path: PathBuf,
     pub lock_path: PathBuf,
     pub min_score: f32,
-    pub topk: usize,
+    pub num_results: usize,
     pub server: ServerConfig,
     pub model: ModelConfig,
 }
@@ -103,7 +103,7 @@ impl Default for MindmapConfig {
                 remote: true,
                 dir: config.join("models/"),
             },
-            topk: 20,
+            num_results: 20,
             server: ServerConfig {
                 host: "127.0.0.1".to_string(),
                 port: 5001,

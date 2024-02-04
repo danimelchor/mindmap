@@ -57,11 +57,11 @@ impl<'a> EmbeddingTree<'a> {
             embedding: emb,
         };
 
-        let topk = self.config.topk;
+        let num_resuls = self.config.num_results;
 
         let results = self
             .tree
-            .k_nearest(&emb_sent, topk)
+            .k_nearest(&emb_sent, num_resuls)
             .iter()
             .map(|x| SearchResult {
                 path: x.item.path.clone(),
