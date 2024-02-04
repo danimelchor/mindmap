@@ -8,19 +8,6 @@
 cargo install mindmap
 ```
 
-## Setup
-
-MindMap will choose a sane default for the configuration file, but you can also
-create it manually. We've created a utility script to help you with that. Just
-run `mindmap setup` and it will create the configuration file for you.
-
-```bash
-$ mindmap setup
-```
-
-Feel free to hit `enter` to select the default values for the config options
-that you aren't sure about.
-
 ## Usage
 
 ```
@@ -42,6 +29,20 @@ Options:
   -h, --help     Print help
   -V, --version  Print version
 ```
+
+## Setup (Advanced)
+
+MindMap will choose a sane default for the configuration file, but you can also
+create it manually. We've created a utility command to help you with that. Just
+run `mindmap setup` and it will create the configuration file for you.
+
+```bash
+$ mindmap setup
+```
+
+Feel free to hit `enter` to select the default values for the config options
+that you aren't sure about.
+
 
 ## Models
 
