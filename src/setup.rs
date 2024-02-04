@@ -80,5 +80,6 @@ pub fn setup() -> Result<()> {
     };
     config.save()?;
 
+    println!("{}", "Setup complete!".green());
     Ok(())
 }
