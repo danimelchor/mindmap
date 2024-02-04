@@ -1,6 +1,6 @@
 use rusqlite::Connection;
 use rust_bert::pipelines::sentence_embeddings::Embedding;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
@@ -29,7 +29,7 @@ pub fn start(config: &MindmapConfig) -> Result<()> {
     Ok(())
 }
 
-fn u8_to_f32(bytes: &Vec<u8>) -> Vec<f32> {
+fn u8_to_f32(bytes: &[u8]) -> Vec<f32> {
     bytes
         .chunks_exact(4)
         .map(TryInto::try_into)
@@ -38,8 +38,8 @@ fn u8_to_f32(bytes: &Vec<u8>) -> Vec<f32> {
         .collect()
 }
 
-fn f32_to_u8(floats: &Vec<f32>) -> Vec<u8> {
-    floats.iter().map(|f| f.to_le_bytes()).flatten().collect()
+fn f32_to_u8(floats: &[f32]) -> Vec<u8> {
+    floats.iter().flat_map(|f| f.to_le_bytes()).collect()
 }
 
 pub fn get_all(config: &MindmapConfig) -> Result<Vec<EmbeddedSentence>> {
@@ -87,7 +87,7 @@ pub fn delete_all(config: &MindmapConfig) -> Result<()> {
     Ok(())
 }
 
-pub fn delete_file(file: &PathBuf, config: &MindmapConfig) -> Result<()> {
+pub fn delete_file(file: &Path, config: &MindmapConfig) -> Result<()> {
     let conn = Connection::open(&config.db_path)?;
     conn.execute(
         "DELETE FROM sentences WHERE path = ?1",

@@ -23,9 +23,9 @@ impl Formatter {
 
     pub fn format(&self, results: &Vec<SearchResult>) -> String {
         match self.format {
-            OutputFormat::List => Self::list(&results),
-            OutputFormat::Raw => Self::raw(&results),
-            OutputFormat::Json => Self::json(&results),
+            OutputFormat::List => Self::list(results),
+            OutputFormat::Raw => Self::raw(results),
+            OutputFormat::Json => Self::json(results),
         }
     }
 

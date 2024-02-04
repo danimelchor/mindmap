@@ -48,7 +48,7 @@ impl<'a> EmbeddingTree<'a> {
         self.tree = VpTree::balanced(corpus);
     }
 
-    pub fn search(&self, query: &String) -> Result<Vec<SearchResult>> {
+    pub fn search(&self, query: &str) -> Result<Vec<SearchResult>> {
         let emb = self.model.encode(query)?;
         let emb_sent = EmbeddedSentence {
             path: PathBuf::new(),
@@ -75,7 +75,7 @@ impl<'a> EmbeddingTree<'a> {
     }
 }
 
-pub fn search(query: &String, config: &MindmapConfig, formatter: &Formatter) -> Result<()> {
+pub fn search(query: &str, config: &MindmapConfig, formatter: &Formatter) -> Result<()> {
     let corpus = database::get_all(config)?;
     let model = Model::new(&config.model).unwrap();
 

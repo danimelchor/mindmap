@@ -87,7 +87,7 @@ impl Server {
         log::info!("Loading model: {:?}", config.model);
         println!("{}: {:?}", "Loading model".blue(), &config.model);
         let model = Model::new(&config.model)?;
-        let corpus = database::get_all(&config)?;
+        let corpus = database::get_all(config)?;
         let mut tree = EmbeddingTree::new(corpus, model, config);
 
         // Start app
@@ -106,8 +106,8 @@ impl Server {
             }
 
             let res = match stream_type.unwrap() {
-                RequestType::Search(query) => Self::handle_query(&query, &tree, &formatter),
-                RequestType::Rebuild => Self::handle_rebuild(&mut tree, &config),
+                RequestType::Search(query) => Self::handle_query(&query, &tree, formatter),
+                RequestType::Rebuild => Self::handle_rebuild(&mut tree, config),
             };
 
             // Send response

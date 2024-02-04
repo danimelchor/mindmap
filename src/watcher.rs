@@ -27,12 +27,9 @@ impl MindmapWatcher {
     ) -> Result<()> {
         let path_str = paths.first().expect("Path should exist");
         let path = PathBuf::from(path_str);
-        match kind {
-            notify::event::CreateKind::File => {
-                files::recompute_file(&path, &self.config)?;
-                println!("File created: {:?}", path);
-            }
-            _ => {}
+        if kind == notify::event::CreateKind::File {
+            files::recompute_file(&path, &self.config)?;
+            println!("File created: {:?}", path);
         }
         Ok(())
     }
@@ -70,12 +67,9 @@ impl MindmapWatcher {
     ) -> Result<()> {
         let path_str = paths.first().expect("Path should exist");
         let path = PathBuf::from(path_str);
-        match kind {
-            notify::event::RemoveKind::File => {
-                println!("File removed: {:?}", path);
-                files::delete_file(&path, &self.config)?;
-            }
-            _ => {}
+        if kind == notify::event::RemoveKind::File {
+            println!("File removed: {:?}", path);
+            files::delete_file(&path, &self.config)?;
         }
         Ok(())
     }
@@ -120,9 +114,9 @@ impl MindmapWatcher {
         self.watcher
             .watch(&self.config.data_dir, RecursiveMode::Recursive)?;
 
-        let mut signals = Signals::new(&[SIGINT, SIGTERM])?;
+        let mut signals = Signals::new([SIGINT, SIGTERM])?;
         thread::spawn(move || {
-            for _ in signals.forever() {
+            if signals.forever().next().is_some() {
                 println!("{}", "Received signal, exiting".red());
                 lock.unlock().expect("Failed to unlock");
                 std::process::exit(0);

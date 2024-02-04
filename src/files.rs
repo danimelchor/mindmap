@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use walkdir::WalkDir;
 
@@ -27,8 +27,8 @@ pub fn recompute_all(config: &MindmapConfig) -> Result<()> {
             embs.extend(emb);
         }
     }
-    database::delete_all(&config)?;
-    database::insert_many(&embs, &config)?;
+    database::delete_all(config)?;
+    database::insert_many(&embs, config)?;
     Ok(())
 }
 
@@ -36,7 +36,7 @@ pub fn recompute_file(file: &PathBuf, config: &MindmapConfig) -> Result<()> {
     let model = Model::new(&config.model)?;
     let emb = _compute_file(file, &model)?;
     database::delete_file(file, config)?;
-    database::insert_many(&emb, &config)?;
+    database::insert_many(&emb, config)?;
     Ok(())
 }
 
@@ -70,7 +70,7 @@ pub fn _compute_file(file: &PathBuf, model: &Model) -> Result<Vec<EmbeddedSenten
     Ok(embs)
 }
 
-pub fn delete_file(file: &PathBuf, config: &MindmapConfig) -> Result<()> {
+pub fn delete_file(file: &Path, config: &MindmapConfig) -> Result<()> {
     database::delete_file(file, config)?;
     Ok(())
 }
