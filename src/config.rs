@@ -37,26 +37,6 @@ impl MindmapConfig {
         Some(config_dir)
     }
 
-    pub fn default() -> Self {
-        let home = Self::get_home_dir().expect("Home directory should exist");
-        let config = Self::get_config_dir().expect("Config directory should exist");
-        let mindmap_config = Self {
-            data_dir: home.join("mindmap"),
-            db_path: config.join("mindmap.db"),
-            log_path: config.join("mindmap.log"),
-            lock_path: home.join(".mindmap.lock"),
-            min_score: 0.2,
-            model: ModelType::AllMiniLmL12V2,
-            topk: 10,
-            server: ServerConfig {
-                host: "127.0.0.1".to_string(),
-                port: 5001,
-            },
-        };
-        mindmap_config.save().expect("Config should save");
-        mindmap_config
-    }
-
     pub fn try_load() -> Result<Self> {
         let config_dir = Self::get_config_dir().expect("Config directory should exist");
         let config_file = config_dir.join("config.yaml");
@@ -88,5 +68,27 @@ impl MindmapConfig {
         file.write_all(yaml_str.as_bytes())?;
 
         Ok(())
+    }
+}
+
+impl Default for MindmapConfig {
+    fn default() -> Self {
+        let home = Self::get_home_dir().expect("Home directory should exist");
+        let config = Self::get_config_dir().expect("Config directory should exist");
+        let mindmap_config = Self {
+            data_dir: home.join("mindmap"),
+            db_path: config.join("mindmap.db"),
+            log_path: config.join("mindmap.log"),
+            lock_path: home.join(".mindmap.lock"),
+            min_score: 0.2,
+            model: ModelType::AllMiniLmL12V2,
+            topk: 10,
+            server: ServerConfig {
+                host: "127.0.0.1".to_string(),
+                port: 5001,
+            },
+        };
+        mindmap_config.save().expect("Config should save");
+        mindmap_config
     }
 }
