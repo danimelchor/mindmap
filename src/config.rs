@@ -84,7 +84,7 @@ impl Default for MindmapConfig {
         let home = Self::get_home_dir().expect("Home directory should exist");
         let config = Self::get_config_dir().expect("Config directory should exist");
         let mindmap_config = Self {
-            data_dir: home.join("mindmap"),
+            data_dir: home.join("notes"),
             db_path: config.join("mindmap.db"),
             log_path: config.join("mindmap.log"),
             lock_path: home.join(".mindmap.lock"),
