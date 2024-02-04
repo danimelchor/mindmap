@@ -4,15 +4,26 @@ use colored::Colorize;
 use std::fmt::Debug;
 use std::{io::Write, path::PathBuf, str::FromStr};
 
-fn prompt<T: Debug + FromStr + Clone>(question: &str, default: &T) -> Result<T> {
+fn _prompt<T: Debug + FromStr + Clone>(question: &str, default: &T, warning: bool) -> Result<T> {
     let mut input = String::new();
-    print!(
-        "{} {}{:?}{}: ",
-        question.blue(),
-        "[".blue(),
-        default,
-        "]".blue()
-    );
+    if warning {
+        print!(
+            "{} {}{:?}{}: ",
+            question.yellow(),
+            "[".yellow(),
+            default,
+            "]".yellow()
+        );
+    } else {
+        print!(
+            "{} {}{:?}{}: ",
+            question.blue(),
+            "[".blue(),
+            default,
+            "]".blue()
+        );
+    }
+
     std::io::stdout().flush().unwrap();
     std::io::stdin().read_line(&mut input).unwrap();
 
@@ -27,18 +38,35 @@ fn prompt<T: Debug + FromStr + Clone>(question: &str, default: &T) -> Result<T> 
     })
 }
 
+fn prompt<T: Debug + FromStr + Clone>(question: &str, default: &T) -> Result<T> {
+    _prompt(question, default, false)
+}
+
 fn download_model(model_config: &ModelConfig) -> Result<()> {
     let repo = model_config.model.to_repo();
     println!("> Downloading model from: {}", repo);
 
-    let mut cmd = std::process::Command::new("git");
-    cmd.arg("clone");
-    cmd.arg(repo);
-    cmd.arg(model_config.get_model_path());
+    let dir = model_config.get_model_path();
+    if dir.exists() {
+        let overwrite = _prompt(
+            "> Model already exists. Do you want to overwrite it?",
+            &false,
+            true,
+        )?;
+        if !overwrite {
+            return Ok(());
+        }
+        std::fs::remove_dir_all(&dir)?;
+    }
 
-    let output = cmd.output()?;
-    if !output.status.success() {
-        anyhow::bail!("Failed to download model: {:?}", output);
+    let status = std::process::Command::new("git")
+        .arg("clone")
+        .arg(repo)
+        .arg(dir)
+        .status()?;
+
+    if !status.success() {
+        anyhow::bail!("Failed to download model: {:?}", status);
     }
 
     Ok(())
@@ -83,16 +111,18 @@ pub fn setup() -> Result<()> {
             &def_config.model.dir,
         )?,
     };
-
-    // Download model for them
-    let should_download = prompt("Do you want us automatically download the model?", &true)?;
     let model = ModelConfig {
         model,
         remote,
         dir: model_dir,
     };
-    if should_download {
-        download_model(&model)?;
+
+    // Download model for user
+    if !remote {
+        let should_download = prompt("Do you want us automatically download the model?", &true)?;
+        if should_download {
+            download_model(&model)?;
+        }
     }
 
     let num_results = prompt(
