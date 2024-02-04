@@ -11,7 +11,7 @@ use anyhow::Result;
 use std::fs;
 
 pub fn recompute_all(config: &MindmapConfig) -> Result<()> {
-    let model = Model::new(&config.model)?;
+    let model = Model::new(config)?;
     let walker = WalkDir::new(&config.data_dir)
         .into_iter()
         .filter_map(|e| e.ok());
@@ -33,7 +33,7 @@ pub fn recompute_all(config: &MindmapConfig) -> Result<()> {
 }
 
 pub fn recompute_file(file: &PathBuf, config: &MindmapConfig) -> Result<()> {
-    let model = Model::new(&config.model)?;
+    let model = Model::new(config)?;
     let emb = _compute_file(file, &model)?;
     database::delete_file(file, config)?;
     database::insert_many(&emb, config)?;

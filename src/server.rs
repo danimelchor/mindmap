@@ -86,7 +86,7 @@ impl Server {
         // Load model
         log::info!("Loading model: {:?}", config.model);
         println!("{}: {:?}", "Loading model".blue(), &config.model);
-        let model = Model::new(&config.model)?;
+        let model = Model::new(config)?;
         let corpus = database::get_all(config)?;
         let mut tree = EmbeddingTree::new(corpus, model, config);
 

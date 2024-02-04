@@ -12,15 +12,22 @@ pub struct ServerConfig {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct ModelConfig {
+    pub model: ModelType,
+    pub remote: bool,
+    pub local_path: PathBuf,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct MindmapConfig {
     pub data_dir: PathBuf,
     pub db_path: PathBuf,
     pub log_path: PathBuf,
     pub lock_path: PathBuf,
     pub min_score: f32,
-    pub model: ModelType,
     pub topk: usize,
     pub server: ServerConfig,
+    pub model: ModelConfig,
 }
 
 impl MindmapConfig {
@@ -81,7 +88,11 @@ impl Default for MindmapConfig {
             log_path: config.join("mindmap.log"),
             lock_path: home.join(".mindmap.lock"),
             min_score: 0.2,
-            model: ModelType::AllMiniLmL12V2,
+            model: ModelConfig {
+                model: ModelType::AllMiniLmL12V2,
+                remote: true,
+                local_path: config.join("model/"),
+            },
             topk: 10,
             server: ServerConfig {
                 host: "127.0.0.1".to_string(),

@@ -4,6 +4,8 @@ use rust_bert::pipelines::sentence_embeddings::{
 };
 use serde::{Deserialize, Serialize};
 
+use crate::config::MindmapConfig;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ModelType {
     BertBaseNliMeanTokens,
@@ -54,9 +56,13 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn new(model_type: &ModelType) -> Result<Self> {
-        let rust_bert_type = model_type.to_rust_bert();
-        let model = SentenceEmbeddingsBuilder::remote(rust_bert_type).create_model()?;
+    pub fn new(config: &MindmapConfig) -> Result<Self> {
+        let model_config = &config.model;
+        let rust_bert_type = model_config.model.to_rust_bert();
+        let model = match model_config.remote {
+            true => SentenceEmbeddingsBuilder::remote(rust_bert_type).create_model()?,
+            false => SentenceEmbeddingsBuilder::local(&model_config.local_path).create_model()?,
+        };
         Ok(Self { model })
     }
 

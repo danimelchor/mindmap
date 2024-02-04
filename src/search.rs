@@ -77,7 +77,7 @@ impl<'a> EmbeddingTree<'a> {
 
 pub fn search(query: &str, config: &MindmapConfig, formatter: &Formatter) -> Result<()> {
     let corpus = database::get_all(config)?;
-    let model = Model::new(&config.model).unwrap();
+    let model = Model::new(config).unwrap();
 
     let tree = EmbeddingTree::new(corpus, model, config);
     let results = tree.search(query)?;
