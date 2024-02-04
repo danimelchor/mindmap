@@ -100,7 +100,7 @@ impl Default for MindmapConfig {
             min_score: 0.25,
             model: ModelConfig {
                 model,
-                remote: false,
+                remote: true,
                 dir: config.join("models/"),
             },
             topk: 20,

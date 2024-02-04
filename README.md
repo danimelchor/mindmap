@@ -8,6 +8,19 @@
 cargo install mindmap
 ```
 
+## Setup
+
+MindMap will choose a sane default for the configuration file, but you can also
+create it manually. We've created a utility script to help you with that. Just
+run `mindmap setup` and it will create the configuration file for you.
+
+```bash
+$ mindmap setup
+```
+
+Feel free to hit `enter` to select the default values for the config options
+that you aren't sure about.
+
 ## Usage
 
 ```
@@ -17,6 +30,7 @@ Search your notes at the speed of thought
 Usage: mindmap <COMMAND>
 
 Commands:
+  setup           Initial config setup
   watch           Watches your MindMap directory for changes
   recompute-all   Recomputes your entire MindMap
   recompute-file  Recomputes a specific file
@@ -27,38 +41,6 @@ Commands:
 Options:
   -h, --help     Print help
   -V, --version  Print version
-```
-
-## Configuration
-
-MindMap reads a configuration file from `~/.config/mindmap/config.yaml`. The default configuration file looks like this:
-
-```yaml
-# The directory where your notes are stored
-data_dir: ~/mindmap
-
-# The file path for your DB
-db_path: ~/.config/mindmap/mindmap.db
-
-# The file where the runtime logs are stored
-log_path: ~/.config/mindmap/mindmap.log
-
-# A lock file to prevent multiple instances of MindMap from running
-lock_path: ~/.mindmap.lock
-
-# The minimum score for a search result to be considered
-min_score: 0.2
-
-# The model
-model: AllMiniLmL12V2
-
-# The number of search results to return
-topk: 10
-
-# Server configuration
-server:
-  host: 127.0.0.1
-  port: 5001
 ```
 
 ## Models
