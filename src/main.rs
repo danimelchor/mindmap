@@ -7,6 +7,7 @@ use mindmap::{
     formatter::{Formatter, OutputFormat},
     search,
     server::Server,
+    setup,
     watcher::MindmapWatcher,
 };
 use std::path::PathBuf;
@@ -20,6 +21,9 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Initial config setup
+    Setup,
+
     /// Watches your MindMap directory for changes
     Watch,
 
@@ -61,6 +65,7 @@ fn main() -> anyhow::Result<()> {
     database::start(&config)?;
 
     match cli.command {
+        Command::Setup => setup::setup()?,
         Command::Watch => {
             log::info!("Starting watcher");
             let mut mm_watcher = MindmapWatcher::new(config);

@@ -45,7 +45,8 @@ impl MindmapConfig {
     }
 
     pub fn try_load() -> Result<Self> {
-        let config_dir = Self::get_config_dir().expect("Config directory should exist");
+        let config_dir =
+            Self::get_config_dir().ok_or(anyhow::anyhow!("Config directory should exist"))?;
         let config_file = config_dir.join("config.yaml");
         let builder = Config::builder().add_source(File::new(
             config_file

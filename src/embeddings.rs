@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anyhow::Result;
 use rust_bert::pipelines::sentence_embeddings::{
     Embedding, SentenceEmbeddingsBuilder, SentenceEmbeddingsModel, SentenceEmbeddingsModelType,
@@ -6,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::MindmapConfig;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ModelType {
     BertBaseNliMeanTokens,
     DistiluseBaseMultilingualCased,
@@ -51,6 +53,23 @@ impl ModelType {
     }
 }
 
+impl FromStr for ModelType {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "BertBaseNliMeanTokens" => Ok(ModelType::BertBaseNliMeanTokens),
+            "DistiluseBaseMultilingualCased" => Ok(ModelType::DistiluseBaseMultilingualCased),
+            "AllMiniLmL12V2" => Ok(ModelType::AllMiniLmL12V2),
+            "AllMiniLmL6V2" => Ok(ModelType::AllMiniLmL6V2),
+            "AllDistilrobertaV1" => Ok(ModelType::AllDistilrobertaV1),
+            "ParaphraseAlbertSmallV2" => Ok(ModelType::ParaphraseAlbertSmallV2),
+            "SentenceT5Base" => Ok(ModelType::SentenceT5Base),
+            _ => Err(()),
+        }
+    }
+}
+
 pub struct Model {
     model: SentenceEmbeddingsModel,
 }
@@ -60,8 +79,12 @@ impl Model {
         let model_config = &config.model;
         let rust_bert_type = model_config.model.to_rust_bert();
         let model = match model_config.remote {
-            true => SentenceEmbeddingsBuilder::remote(rust_bert_type).create_model()?,
-            false => SentenceEmbeddingsBuilder::local(&model_config.local_path).create_model()?,
+            true => SentenceEmbeddingsBuilder::remote(rust_bert_type)
+                .with_device(tch::Device::cuda_if_available())
+                .create_model()?,
+            false => SentenceEmbeddingsBuilder::local(&model_config.local_path)
+                .with_device(tch::Device::cuda_if_available())
+                .create_model()?,
         };
         Ok(Self { model })
     }

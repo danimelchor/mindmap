@@ -5,4 +5,5 @@ pub mod files;
 pub mod formatter;
 pub mod search;
 pub mod server;
+pub mod setup;
 pub mod watcher;
