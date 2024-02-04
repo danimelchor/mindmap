@@ -18,7 +18,6 @@ pub fn start(config: &MindmapConfig) -> Result<()> {
     let conn = Connection::open(&config.db_path)?;
     conn.execute(
         "CREATE TABLE IF NOT EXISTS sentences (
-            id INTEGER PRIMARY KEY,
             path TEXT,
             start_line_no INTEGER,
             end_line_no INTEGER,
