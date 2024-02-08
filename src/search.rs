@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
+use acap::cos::cosine_distance;
 use acap::knn::NearestNeighbors;
 use acap::vp::VpTree;
-use acap::{euclidean_distance, Distance, EuclideanDistance, Proximity};
+use acap::{Distance, Proximity};
 use anyhow::Result;
 use serde::Serialize;
 
@@ -22,18 +23,18 @@ pub struct SearchResult {
 }
 
 impl Proximity<EmbeddedSentence> for EmbeddedSentence {
-    type Distance = EuclideanDistance<f32>;
+    type Distance = f32;
 
     fn distance(&self, other: &Self) -> Self::Distance {
-        euclidean_distance(&self.embedding, &other.embedding)
+        cosine_distance(&self.embedding, &other.embedding)
     }
 }
 
 impl Proximity<EmbeddedSentence> for Vec<f32> {
-    type Distance = EuclideanDistance<f32>;
+    type Distance = f32;
 
     fn distance(&self, other: &EmbeddedSentence) -> Self::Distance {
-        euclidean_distance(&self, &other.embedding)
+        cosine_distance(&self, &other.embedding)
     }
 }
 

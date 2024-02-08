@@ -25,6 +25,7 @@ pub fn recompute_all(config: &MindmapConfig) -> Result<()> {
         if path.extension().unwrap_or_default() != "md" {
             continue;
         }
+        println!("Processing {:?}", path);
         let ast = parse_file(&path)?;
         process_and_store_file(&path, config, &ast, &model)?;
     }
