@@ -31,13 +31,26 @@ enum RequestType {
 pub struct Server;
 
 impl Server {
+    fn read_full(stream: &mut TcpStream) -> Result<Vec<u8>> {
+        let mut buf = vec![0; 1024];
+        let mut total = Vec::new();
+        loop {
+            let read = stream.read(&mut buf)?;
+            total.extend_from_slice(&buf[..read]);
+            if read < buf.len() {
+                break;
+            }
+        }
+        Ok(total)
+    }
+
     fn parse_request(stream: &mut TcpStream) -> Result<RequestType> {
         // Read and parse stream HTTP req
-        let buf = &mut [0; 1024];
-        stream.read(buf)?;
+        let buf = Self::read_full(stream)?;
+
         let mut headers = [httparse::EMPTY_HEADER; 16];
         let mut req = httparse::Request::new(&mut headers);
-        req.parse(buf)?;
+        req.parse(&buf)?;
 
         // Extract path and query params
         let path = req.path.ok_or(anyhow::anyhow!("No path in request"))?;

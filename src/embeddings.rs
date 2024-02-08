@@ -100,7 +100,7 @@ impl Model {
             true => SentenceEmbeddingsBuilder::remote(rust_bert_type)
                 .with_device(tch::Device::cuda_if_available())
                 .create_model()?,
-            false => SentenceEmbeddingsBuilder::local(&model_config.get_model_path())
+            false => SentenceEmbeddingsBuilder::local(model_config.get_model_path())
                 .with_device(tch::Device::cuda_if_available())
                 .create_model()?,
         };
