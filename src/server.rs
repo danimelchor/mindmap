@@ -67,6 +67,7 @@ impl Server {
     }
 
     fn handle_query(query: &String, tree: &EmbeddingTree, formatter: &Formatter) -> Result<String> {
+        println!("{} '{}'", "Querying for".blue(), query);
         let results = tree.search(&query.to_string())?;
         let formatted = formatter.format(&results);
         Ok(formatted)
