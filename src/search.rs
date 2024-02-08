@@ -29,6 +29,14 @@ impl Proximity<EmbeddedSentence> for EmbeddedSentence {
     }
 }
 
+impl Proximity<EmbeddedSentence> for Vec<f32> {
+    type Distance = EuclideanDistance<f32>;
+
+    fn distance(&self, other: &EmbeddedSentence) -> Self::Distance {
+        euclidean_distance(&self, &other.embedding)
+    }
+}
+
 pub struct EmbeddingTree<'a> {
     tree: VpTree<EmbeddedSentence>,
     model: Model,
@@ -50,18 +58,11 @@ impl<'a> EmbeddingTree<'a> {
 
     pub fn search(&self, query: &str) -> Result<Vec<SearchResult>> {
         let emb = self.model.encode(query)?;
-        let emb_sent = EmbeddedSentence {
-            path: PathBuf::new(),
-            start_line_no: 0,
-            end_line_no: 0,
-            embedding: emb,
-        };
-
         let num_resuls = self.config.num_results;
 
         let results = self
             .tree
-            .k_nearest(&emb_sent, num_resuls)
+            .k_nearest(&emb, num_resuls)
             .iter()
             .map(|x| SearchResult {
                 path: x.item.path.clone(),
