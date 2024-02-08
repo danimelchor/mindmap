@@ -1,5 +1,6 @@
-use std::path::{Path, PathBuf};
-
+use itertools::Itertools;
+use markdown::mdast::Node;
+use std::path::Path;
 use walkdir::WalkDir;
 
 use crate::{
@@ -7,7 +8,7 @@ use crate::{
     database::{self, EmbeddedSentence},
     embeddings::Model,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use std::fs;
 
 pub fn recompute_all(config: &MindmapConfig) -> Result<()> {
@@ -16,58 +17,72 @@ pub fn recompute_all(config: &MindmapConfig) -> Result<()> {
         .into_iter()
         .filter_map(|e| e.ok());
 
-    let mut embs = vec![];
     for entry in walker {
         if entry.file_type().is_dir() {
             continue;
         }
         let path = entry.into_path();
-        let emb = _compute_file(&path, &model);
-        if let Ok(emb) = emb {
-            embs.extend(emb);
+        if path.extension().unwrap_or_default() != "md" {
+            continue;
         }
+        let ast = parse_file(&path)?;
+        process_and_store_file(&path, config, &ast, &model)?;
     }
-    database::delete_all(config)?;
-    database::insert_many(&embs, config)?;
     Ok(())
 }
 
-pub fn recompute_file(file: &PathBuf, config: &MindmapConfig) -> Result<()> {
+pub fn recompute_file(file: &Path, config: &MindmapConfig) -> Result<()> {
     let model = Model::new(config)?;
-    let emb = _compute_file(file, &model)?;
-    database::delete_file(file, config)?;
-    database::insert_many(&emb, config)?;
+    let ast = parse_file(file)?;
+    process_and_store_file(file, config, &ast, &model)?;
     Ok(())
 }
 
-pub fn _compute_file(file: &PathBuf, model: &Model) -> Result<Vec<EmbeddedSentence>> {
-    let content = fs::read_to_string(file)?;
-    let opts = markdown::ParseOptions::default();
-    let ast = markdown::to_mdast(&content, &opts);
+pub fn process_and_store_file(
+    file: &Path,
+    config: &MindmapConfig,
+    ast: &Node,
+    model: &Model,
+) -> Result<()> {
+    // Delete existing data
+    database::delete_file(file, config)?;
 
-    if ast.is_err() {
-        return Err(anyhow::anyhow!("Failed to parse file: {:?}", file));
+    // Process 10 blocks at a time
+    let iter = compute_file(ast, file, model);
+    for chunk in iter.chunks(10).into_iter() {
+        let embs: Vec<EmbeddedSentence> = chunk.collect();
+        database::insert_many(&embs, config)?;
     }
-    let ast = ast.unwrap();
 
-    let children = ast.children().ok_or(anyhow::anyhow!("No children"))?;
-    let embs = children.iter().map(|child| {
+    Ok(())
+}
+
+fn parse_file(path: &Path) -> Result<Node> {
+    let content = fs::read_to_string(path)?;
+    let opts = markdown::ParseOptions::default();
+    let ast = markdown::to_mdast(&content, &opts).map_err(|e| anyhow!(e))?;
+    Ok(ast)
+}
+
+fn compute_file<'a>(
+    ast: &'a Node,
+    path: &'a Path,
+    model: &'a Model,
+) -> impl Iterator<Item = EmbeddedSentence> + 'a {
+    ast.children().unwrap().iter().map(|child| {
         let pos = child.position().expect("No position");
         let start = &pos.start.line;
         let end = &pos.end.line;
         let content = child.to_string();
-        let emb = model.encode(&content)?;
+        let emb = model.encode(&content).unwrap();
 
-        Ok(EmbeddedSentence {
-            path: file.clone(),
+        EmbeddedSentence {
+            path: path.to_path_buf(),
             start_line_no: *start,
             end_line_no: *end,
             embedding: emb,
-        })
-    });
-
-    let embs = embs.collect::<Result<Vec<_>>>()?;
-    Ok(embs)
+        }
+    })
 }
 
 pub fn delete_file(file: &Path, config: &MindmapConfig) -> Result<()> {
