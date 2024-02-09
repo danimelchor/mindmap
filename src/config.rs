@@ -1,5 +1,6 @@
 use anyhow::Result;
 use config::{Config, File, FileFormat};
+use inquire::ui::{Color, RenderConfig, StyleSheet, Styled};
 use serde::{Deserialize, Serialize};
 use std::{env, fs::OpenOptions, io::Write, path::PathBuf};
 
@@ -112,4 +113,16 @@ impl Default for MindmapConfig {
         mindmap_config.save().expect("Config should save");
         mindmap_config
     }
+}
+
+pub fn get_render_config() -> RenderConfig {
+    let mut render_config = RenderConfig::default();
+    render_config.prompt_prefix = Styled::new(">").with_fg(Color::LightBlue);
+    render_config.answered_prompt_prefix = Styled::new(">").with_fg(Color::LightCyan);
+    render_config.error_message = render_config
+        .error_message
+        .with_prefix(Styled::new("❌").with_fg(Color::LightRed));
+
+    render_config.prompt = StyleSheet::new().with_fg(Color::LightBlue);
+    render_config
 }

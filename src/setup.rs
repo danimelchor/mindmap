@@ -1,64 +1,25 @@
 use crate::config::{MindmapConfig, ModelConfig, ServerConfig};
+use crate::embeddings::ModelType;
 use anyhow::Result;
 use colored::Colorize;
-use std::fmt::Debug;
-use std::{io::Write, path::PathBuf, str::FromStr};
-
-fn _prompt<T: Debug + FromStr + Clone>(question: &str, default: &T, warning: bool) -> Result<T> {
-    let mut input = String::new();
-    if warning {
-        print!(
-            "{} {}{:?}{}: ",
-            question.yellow(),
-            "[".yellow(),
-            default,
-            "]".yellow()
-        );
-    } else {
-        print!(
-            "{} {}{:?}{}: ",
-            question.blue(),
-            "[".blue(),
-            default,
-            "]".blue()
-        );
-    }
-
-    std::io::stdout().flush().unwrap();
-    std::io::stdin().read_line(&mut input).unwrap();
-
-    input = input.trim().to_string();
-    if input.is_empty() {
-        return Ok(default.clone());
-    }
-
-    input.parse::<T>().or_else(|_| {
-        println!("Invalid input: {:?}", input);
-        prompt(question, default)
-    })
-}
-
-fn prompt<T: Debug + FromStr + Clone>(question: &str, default: &T) -> Result<T> {
-    _prompt(question, default, false)
-}
+use inquire::{Confirm, CustomType, Select, Text};
+use std::path::PathBuf;
 
 fn download_model(model_config: &ModelConfig) -> Result<()> {
     let repo = model_config.model.to_repo();
-    println!("> Downloading model from: {}", repo);
 
     let dir = model_config.get_model_path();
     if dir.exists() {
-        let overwrite = _prompt(
-            "> Model already exists. Do you want to overwrite it?",
-            &false,
-            true,
-        )?;
+        let overwrite = Confirm::new("Model already exists. Do you want to overwrite it?")
+            .with_default(false)
+            .prompt()?;
         if !overwrite {
             return Ok(());
         }
         std::fs::remove_dir_all(&dir)?;
     }
 
+    println!("> Downloading model from: {}", repo);
     let status = std::process::Command::new("git")
         .arg("clone")
         .arg(repo)
@@ -77,39 +38,46 @@ pub fn setup() -> Result<()> {
 
     let def_config = MindmapConfig::default();
 
-    let data_dir = prompt(
-        "Where do you want to write your notes?",
-        &def_config.data_dir,
-    )?;
-    let db_path = prompt(
-        "Where do you want to store the database?",
-        &def_config.db_path,
-    )?;
-    let log_path = prompt(
-        "Where do you want to store MindMap's logs?",
-        &def_config.log_path,
-    )?;
-    let lock_path = prompt(
-        "Where do you want to store MindMap's lock file?",
-        &def_config.lock_path,
-    )?;
-    let min_score = prompt(
-        "What is the minimum score to consider a search result?",
-        &def_config.min_score,
-    )?;
+    let data_dir: PathBuf = Text::new("Where do you want to write your notes?")
+        .with_default(def_config.data_dir.to_str().unwrap())
+        .prompt()?
+        .into();
+
+    let db_path: PathBuf = Text::new("Where do you want to store the database?")
+        .with_default(def_config.db_path.to_str().unwrap())
+        .prompt()?
+        .into();
+    let log_path: PathBuf = Text::new("Where do you want to store MindMap's logs?")
+        .with_default(def_config.log_path.to_str().unwrap())
+        .prompt()?
+        .into();
+    let lock_path: PathBuf = Text::new("Where do you want to store MindMap's lock file?")
+        .with_default(def_config.lock_path.to_str().unwrap())
+        .prompt()?
+        .into();
+    let min_score =
+        CustomType::<f32>::new("What is the minimum score for a note to be considered relevant?")
+            .with_error_message("Invalid input. Please enter a number.")
+            .with_default(def_config.min_score)
+            .prompt()?;
 
     // Model config
-    let model = prompt("What model do you want to use?", &def_config.model.model)?;
-    let remote = prompt(
-        "Do you want to use a remote model?",
-        &def_config.model.remote,
-    )?;
+    // let model = prompt("What model do you want to use?", &def_config.model.model)?;
+    let models = ModelType::all();
+    let model = Select::new("What model do you want to use?", models)
+        .prompt()?
+        .into();
+
+    let remote = Confirm::new("Do you want to use a remote model?")
+        .with_default(def_config.model.remote)
+        .prompt()?;
+
     let model_dir = match remote {
         true => PathBuf::new(),
-        false => prompt(
-            "Where do you want to store the model?",
-            &def_config.model.dir,
-        )?,
+        false => Text::new("Where do you want to store the model?")
+            .with_default(def_config.model.dir.to_str().unwrap())
+            .prompt()?
+            .into(),
     };
     let model = ModelConfig {
         model,
@@ -119,19 +87,27 @@ pub fn setup() -> Result<()> {
 
     // Download model for user
     if !remote {
-        let should_download = prompt("Do you want us automatically download the model?", &true)?;
+        let should_download = Confirm::new("Do you want us automatically download the model?")
+            .with_default(true)
+            .prompt()?;
         if should_download {
             download_model(&model)?;
         }
     }
 
-    let num_results = prompt(
-        "How many notes do you want to show in search results?",
-        &def_config.num_results,
-    )?;
+    let num_results =
+        CustomType::<usize>::new("How many notes do you want to show in search results?")
+            .with_error_message("Invalid input. Please enter a number.")
+            .with_default(def_config.num_results)
+            .prompt()?;
     let server = ServerConfig {
-        host: prompt("What host do you want to use?", &def_config.server.host)?,
-        port: prompt("What port do you want to use?", &def_config.server.port)?,
+        host: Text::new("What host do you want to use?")
+            .with_default(&def_config.server.host)
+            .prompt()?,
+        port: CustomType::<u16>::new("What port do you want to use?")
+            .with_error_message("Invalid input. Please enter a number.")
+            .with_default(def_config.server.port)
+            .prompt()?,
     };
 
     let config = MindmapConfig {

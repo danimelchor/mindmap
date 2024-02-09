@@ -1,4 +1,7 @@
-use std::str::FromStr;
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
 
 use anyhow::Result;
 use rust_bert::pipelines::sentence_embeddings::{
@@ -10,16 +13,28 @@ use crate::config::MindmapConfig;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ModelType {
-    BertBaseNliMeanTokens,
-    DistiluseBaseMultilingualCased,
     AllMiniLmL12V2,
     AllMiniLmL6V2,
     AllDistilrobertaV1,
+    BertBaseNliMeanTokens,
+    DistiluseBaseMultilingualCased,
     ParaphraseAlbertSmallV2,
     SentenceT5Base,
 }
 
 impl ModelType {
+    pub fn all() -> Vec<ModelType> {
+        vec![
+            ModelType::AllMiniLmL12V2,
+            ModelType::AllMiniLmL6V2,
+            ModelType::AllDistilrobertaV1,
+            ModelType::BertBaseNliMeanTokens,
+            ModelType::DistiluseBaseMultilingualCased,
+            ModelType::ParaphraseAlbertSmallV2,
+            ModelType::SentenceT5Base,
+        ]
+    }
+
     pub fn to_rust_bert(&self) -> SentenceEmbeddingsModelType {
         match self {
             ModelType::BertBaseNliMeanTokens => SentenceEmbeddingsModelType::BertBaseNliMeanTokens,
@@ -85,6 +100,13 @@ impl FromStr for ModelType {
             "SentenceT5Base" => Ok(ModelType::SentenceT5Base),
             _ => Err(()),
         }
+    }
+}
+
+impl Display for ModelType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let s = self.to_repo_name();
+        write!(f, "{}", s)
     }
 }
 

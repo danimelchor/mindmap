@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 use colored::Colorize;
 use log::LevelFilter;
 use mindmap::{
-    config::MindmapConfig,
+    config::{get_render_config, MindmapConfig},
     database, files,
     formatter::{Formatter, OutputFormat},
     search,
@@ -60,6 +60,7 @@ fn main() -> anyhow::Result<()> {
     log::debug!("Loaded config");
 
     let cli = Cli::parse();
+    inquire::set_global_render_config(get_render_config());
 
     log::info!("Connecting to database");
     database::start(&config)?;
