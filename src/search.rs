@@ -5,16 +5,15 @@ use acap::knn::NearestNeighbors;
 use acap::vp::VpTree;
 use acap::{Distance, Proximity};
 use anyhow::Result;
-use serde::Serialize;
 
+use crate::formatter::{self, OutputFormat};
 use crate::{
     config::MindmapConfig,
     database::{self, EmbeddedSentence},
     embeddings::Model,
-    formatter::Formatter,
 };
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct SearchResult {
     pub path: PathBuf,
     pub start_line_no: usize,
@@ -77,7 +76,7 @@ impl<'a> EmbeddingTree<'a> {
     }
 }
 
-pub fn search(query: &str, config: &MindmapConfig, formatter: &Formatter) -> Result<()> {
+pub fn search(query: &str, config: &MindmapConfig, format: OutputFormat) -> Result<()> {
     let corpus = database::get_all(config)?;
     let model = Model::new(config).unwrap();
 
@@ -85,7 +84,7 @@ pub fn search(query: &str, config: &MindmapConfig, formatter: &Formatter) -> Res
     let results = tree.search(query)?;
 
     // Format response
-    let formatted = formatter.format(&results);
+    let formatted = formatter::format(&results, format);
     println!("{}", formatted);
     Ok(())
 }

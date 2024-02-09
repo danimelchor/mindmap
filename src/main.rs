@@ -4,7 +4,7 @@ use log::LevelFilter;
 use mindmap::{
     config::{get_render_config, MindmapConfig},
     database, files,
-    formatter::{Formatter, OutputFormat},
+    formatter::OutputFormat,
     search,
     server::Server,
     setup,
@@ -51,11 +51,7 @@ enum Command {
     },
 
     /// Starts the MindMap server
-    Server {
-        /// The output format
-        #[arg(value_enum, short, long, default_value = "raw")]
-        format: OutputFormat,
-    },
+    Server,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -101,12 +97,10 @@ fn main() -> anyhow::Result<()> {
         }
         Command::Query { query, format } => {
             log::info!("Searching for: {}", query);
-            let formatter = Formatter::new(format);
-            search::search(&query, &config, &formatter)?;
+            search::search(&query, &config, format)?;
         }
-        Command::Server { format } => {
-            let formatter = Formatter::new(format);
-            Server::start(&config, &formatter)?;
+        Command::Server => {
+            Server::start(&config)?;
         }
     }
 

@@ -1,5 +1,9 @@
 use crate::{
-    config::MindmapConfig, database, embeddings::Model, formatter::Formatter, search::EmbeddingTree,
+    config::MindmapConfig,
+    database,
+    embeddings::Model,
+    formatter::{self, OutputFormat},
+    search::EmbeddingTree,
 };
 use anyhow::Result;
 use colored::Colorize;
@@ -24,7 +28,7 @@ pub fn notify_rebuild(config: &MindmapConfig) -> Result<()> {
 }
 
 enum RequestType {
-    Search(String),
+    Search(String, OutputFormat),
     Rebuild,
 }
 
@@ -63,13 +67,19 @@ impl Server {
         let query = hash_query
             .get("q")
             .ok_or(anyhow::anyhow!("No query in request"))?;
-        Ok(RequestType::Search(query.to_string()))
+
+        let output_format = hash_query
+            .get("format")
+            .map(|f| f.parse().unwrap_or(OutputFormat::Raw))
+            .unwrap_or(OutputFormat::Raw);
+
+        Ok(RequestType::Search(query.to_string(), output_format))
     }
 
-    fn handle_query(query: &String, tree: &EmbeddingTree, formatter: &Formatter) -> Result<String> {
-        println!("{} '{}'", "Querying for".blue(), query);
+    fn handle_query(query: &String, format: OutputFormat, tree: &EmbeddingTree) -> Result<String> {
+        println!("{} '{}' ({})", "Querying for".blue(), query, format);
         let results = tree.search(&query.to_string())?;
-        let formatted = formatter.format(&results);
+        let formatted = formatter::format(&results, format);
         Ok(formatted)
     }
 
@@ -82,15 +92,20 @@ impl Server {
 
     fn send_response(code: u16, body: &str, stream: &mut TcpStream) -> Result<()> {
         let length = body.len();
+
+        // CORS stuff
+        let headers =
+            format!("Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: GET\r\n");
+
         let response = format!(
-            "HTTP/1.1 {}\r\nContent-Length: {}\r\n\r\n{}",
-            code, length, body
+            "HTTP/1.1 {}\r\n{}Content-Length: {}\r\n\r\n{}",
+            code, headers, length, body
         );
         stream.write_all(response.as_bytes())?;
         Ok(())
     }
 
-    pub fn start(config: &MindmapConfig, formatter: &Formatter) -> Result<()> {
+    pub fn start(config: &MindmapConfig) -> Result<()> {
         // Get address
         let host = &config.server.host;
         let port = &config.server.port;
@@ -120,7 +135,7 @@ impl Server {
             }
 
             let res = match stream_type.unwrap() {
-                RequestType::Search(query) => Self::handle_query(&query, &tree, formatter),
+                RequestType::Search(query, format) => Self::handle_query(&query, format, &tree),
                 RequestType::Rebuild => Self::handle_rebuild(&mut tree, config),
             };
 
