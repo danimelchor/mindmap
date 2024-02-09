@@ -64,9 +64,7 @@ pub fn setup() -> Result<()> {
     // Model config
     // let model = prompt("What model do you want to use?", &def_config.model.model)?;
     let models = ModelType::all();
-    let model = Select::new("What model do you want to use?", models)
-        .prompt()?
-        .into();
+    let model = Select::new("What model do you want to use?", models).prompt()?;
 
     let remote = Confirm::new("Do you want to use a remote model?")
         .with_default(def_config.model.remote)
