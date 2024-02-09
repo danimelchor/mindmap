@@ -62,7 +62,7 @@ fn get_context(result: &SearchResult) -> String {
     lines[start_no..end_no].join("\n")
 }
 
-pub fn format(results: &Vec<SearchResult>, format: OutputFormat) -> String {
+pub fn format(results: &[SearchResult], format: OutputFormat) -> String {
     let with_context = results
         .iter()
         .map(|r| SearchResultWithContext {

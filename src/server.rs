@@ -95,7 +95,7 @@ impl Server {
 
         // CORS stuff
         let headers =
-            format!("Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: GET\r\n");
+            "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: GET\r\n".to_string();
 
         let response = format!(
             "HTTP/1.1 {}\r\n{}Content-Length: {}\r\n\r\n{}",
