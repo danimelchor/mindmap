@@ -73,6 +73,15 @@ fn main() -> anyhow::Result<()> {
             mm_watcher.watch()?;
         }
         Command::RecomputeAll => {
+            let confirmed = inquire::Confirm::new("Are you sure you want to recompute all files?")
+                .with_default(false)
+                .prompt()?;
+            if !confirmed {
+                log::info!("Aborting recompute all");
+                println!("{}", "Aborting recompute all".red());
+                return Ok(());
+            }
+
             log::info!("Recomputing all files");
             println!("{}", "Recomputing all files...".blue());
             files::recompute_all(&config)?;
