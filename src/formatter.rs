@@ -1,4 +1,5 @@
 use clap::ValueEnum;
+use colored::Colorize;
 
 use crate::search::SearchResult;
 
@@ -30,7 +31,7 @@ impl Formatter {
     }
 
     fn list(results: &Vec<SearchResult>) -> String {
-        let mut fmt = String::new();
+        let mut sentences = vec![];
         for r in results {
             let start_no = r.start_line_no;
             let end_no = r.end_line_no;
@@ -46,15 +47,17 @@ impl Formatter {
             };
             let text = lines[start_no..end_no].join("\n");
 
-            fmt.push_str(&format!(
-                "{}:{}:{}\n{}\n\n",
+            let title = format!(
+                "{}:{}:{} - {}",
                 r.path.display(),
                 start_no,
                 end_no,
-                text
-            ));
+                r.distance
+            );
+            let sentence = format!("{}\n{}", title.blue(), text);
+            sentences.push(sentence);
         }
-        fmt
+        sentences.join("\n\n")
     }
 
     fn raw(results: &Vec<SearchResult>) -> String {
