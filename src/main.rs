@@ -28,7 +28,11 @@ enum Command {
     Watch,
 
     /// Recomputes your entire MindMap
-    RecomputeAll,
+    RecomputeAll {
+        /// Skip confirmation
+        #[arg(short, long, action)]
+        yes: bool,
+    },
 
     /// Recomputes a specific file
     RecomputeFile {
@@ -72,10 +76,14 @@ fn main() -> anyhow::Result<()> {
             let mut mm_watcher = MindmapWatcher::new(config);
             mm_watcher.watch()?;
         }
-        Command::RecomputeAll => {
-            let confirmed = inquire::Confirm::new("Are you sure you want to recompute all files?")
-                .with_default(false)
-                .prompt()?;
+        Command::RecomputeAll { yes } => {
+            let mut confirmed = true;
+            if !yes {
+                confirmed = inquire::Confirm::new("Are you sure you want to recompute all files?")
+                    .with_default(false)
+                    .prompt()?;
+            }
+
             if !confirmed {
                 log::info!("Aborting recompute all");
                 println!("{}", "Aborting recompute all".red());
