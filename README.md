@@ -3,8 +3,20 @@
 A fast and efficient semantic search engine built in Rust to generate and search embeddings for your notes
 
 ## Showcase
-<img width="861" alt="image" src="https://github.com/danimelchor/mindmap/assets/24496843/562b939a-fa4e-44ba-abb6-cc1ed27b8558">
 
+### Note watching
+<img width="669" alt="image" src="https://github.com/danimelchor/mindmap/assets/24496843/6d95d54e-2ff7-477e-bdff-994db54bd9f2">
+
+### Server querying
+```
+curl -G --data-urlencode "q=poison" http://127.0.0.1:5001/
+curl -G --data-urlencode "q=poison" --data-urlencode "format=json" http://127.0.0.1:5001/
+```
+
+<img width="1705" alt="image" src="https://github.com/danimelchor/mindmap/assets/24496843/2fd3ccde-4bd9-4542-b133-b6c353136fbd">
+
+### Pure CLI usage
+<img width="693" alt="image" src="https://github.com/danimelchor/mindmap/assets/24496843/d18b45c6-e7a9-42ee-8572-df115dac7bdd">
 
 ## Installation
 
