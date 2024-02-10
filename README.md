@@ -66,13 +66,13 @@ that you aren't sure about.
 ## Models
 
 There are a few models to choose from. The models are:
-- AllDistilrobertaV1
-- AllMiniLmL12V2
-- AllMiniLmL6V2
-- BertBaseNliMeanTokens
-- DistiluseBaseMultilingualCased
-- ParaphraseAlbertSmallV2
-- SentenceT5Base
+- [AllDistilrobertaV1](https://huggingface.co/sentence-transformers/all-distilroberta-v1)
+- [AllMiniLmL12V2](https://huggingface.co/sentence-transformers/all-MiniLM-L12-v2)
+- [AllMiniLmL6V2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
+- [BertBaseNliMeanTokens](https://huggingface.co/sentence-transformers/bert-base-nli-mean-tokens)
+- [DistiluseBaseMultilingualCased](https://huggingface.co/sentence-transformers/distiluse-base-multilingual-cased)
+- [ParaphraseAlbertSmallV2](https://huggingface.co/sentence-transformers/paraphrase-albert-small-v2)
+- [SentenceT5Base](https://huggingface.co/sentence-transformers/sentence-t5-base)
 
 ## Server
 
