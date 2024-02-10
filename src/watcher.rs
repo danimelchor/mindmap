@@ -1,16 +1,11 @@
-use std::{path::PathBuf, thread};
+use std::path::PathBuf;
 
 extern crate fs2;
 
 use crate::{config::MindmapConfig, files, utils};
 use anyhow::Result;
 use colored::Colorize;
-use fs2::FileExt;
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
-use signal_hook::{
-    consts::{SIGINT, SIGTERM},
-    iterator::Signals,
-};
 
 pub struct MindmapWatcher {
     watcher: RecommendedWatcher,
