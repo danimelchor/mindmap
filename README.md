@@ -1,6 +1,8 @@
 # MindMap
 
-`MindMap` is a simple CLI tool that allows you to search your notes using semantic search. MindMap offers quite a few models to choose from.
+A fast and efficient semantic search engine built in Rust to generate and search embeddings for your notes
+
+## Showcase
 
 ## Installation
 

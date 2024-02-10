@@ -3,9 +3,10 @@ name = "mindmap"
 version = "0.1.0"
 edition = "2021"
 description = "Search your notes at the speed of thought"
+repository = "https://github.com/danimelchor/mindmap"
 authors = ["Daniel Melchor <dmh672@gmail.com>"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license_file = "LICENSE.txt"
+readme = "README.md"
 
 [dependencies]
 abomonation = "0.7.3"
@@ -31,3 +32,6 @@ simple-logging = "2.0.2"
 tch = "0.14.0"
 url = "2.5.0"
 walkdir = "2.4.0"
+
+[[bin]]
+name = "mindmap"
