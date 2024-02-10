@@ -3,6 +3,8 @@
 A fast and efficient semantic search engine built in Rust to generate and search embeddings for your notes
 
 ## Showcase
+<img width="861" alt="image" src="https://github.com/danimelchor/mindmap/assets/24496843/562b939a-fa4e-44ba-abb6-cc1ed27b8558">
+
 
 ## Installation
 
