@@ -2,7 +2,7 @@ use std::{path::PathBuf, thread};
 
 extern crate fs2;
 
-use crate::{config::MindmapConfig, files};
+use crate::{config::MindmapConfig, files, utils};
 use anyhow::Result;
 use colored::Colorize;
 use fs2::FileExt;
@@ -11,7 +11,6 @@ use signal_hook::{
     consts::{SIGINT, SIGTERM},
     iterator::Signals,
 };
-use std::fs::File;
 
 pub struct MindmapWatcher {
     watcher: RecommendedWatcher,
@@ -94,34 +93,12 @@ impl MindmapWatcher {
         }
     }
 
-    pub fn acquire_lock(path: &PathBuf) -> Result<File> {
-        let file = if !path.exists() {
-            File::create(path)?
-        } else {
-            File::open(path)?
-        };
-        let res = file.try_lock_exclusive();
-        if res.is_err() {
-            println!("Another instance is running, waiting for it to finish...");
-            file.lock_exclusive()?;
-        }
-        Ok(file)
-    }
-
     pub fn watch(&mut self) -> Result<()> {
-        let lock = Self::acquire_lock(&self.config.lock_path)?;
+        utils::acquire_lock(&self.config.watcher.lock_path)?;
+
         println!("{}", "Watching files...".blue());
         self.watcher
             .watch(&self.config.data_dir, RecursiveMode::Recursive)?;
-
-        let mut signals = Signals::new([SIGINT, SIGTERM])?;
-        thread::spawn(move || {
-            if signals.forever().next().is_some() {
-                println!("{}", "Received signal, exiting".red());
-                lock.unlock().expect("Failed to unlock");
-                std::process::exit(0);
-            }
-        });
 
         for res in &self.rx {
             match res {

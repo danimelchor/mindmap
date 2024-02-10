@@ -10,6 +10,12 @@ use crate::embeddings::ModelType;
 pub struct ServerConfig {
     pub host: String,
     pub port: u16,
+    pub lock_path: PathBuf,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct WatcherConfig {
+    pub lock_path: PathBuf,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -32,11 +38,11 @@ pub struct MindmapConfig {
     pub data_dir: PathBuf,
     pub db_path: PathBuf,
     pub log_path: PathBuf,
-    pub lock_path: PathBuf,
     pub min_score: f32,
     pub num_results: usize,
     pub server: ServerConfig,
     pub model: ModelConfig,
+    pub watcher: WatcherConfig,
 }
 
 impl MindmapConfig {
@@ -97,7 +103,6 @@ impl Default for MindmapConfig {
             data_dir: home.join("notes"),
             db_path: config.join("mindmap.db"),
             log_path: config.join("mindmap.log"),
-            lock_path: home.join(".mindmap.lock"),
             min_score: 0.25,
             model: ModelConfig {
                 model,
@@ -108,6 +113,10 @@ impl Default for MindmapConfig {
             server: ServerConfig {
                 host: "127.0.0.1".to_string(),
                 port: 5001,
+                lock_path: home.join(".mindmap-server.lock"),
+            },
+            watcher: WatcherConfig {
+                lock_path: home.join(".mindmap-watcher.lock"),
             },
         };
         mindmap_config.save().expect("Config should save");

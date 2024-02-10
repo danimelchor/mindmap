@@ -1,4 +1,4 @@
-use crate::config::{MindmapConfig, ModelConfig, ServerConfig};
+use crate::config::{MindmapConfig, ModelConfig, ServerConfig, WatcherConfig};
 use crate::embeddings::ModelType;
 use anyhow::Result;
 use colored::Colorize;
@@ -49,10 +49,6 @@ pub fn setup() -> Result<()> {
         .into();
     let log_path: PathBuf = Text::new("Where do you want to store MindMap's logs?")
         .with_default(def_config.log_path.to_str().unwrap())
-        .prompt()?
-        .into();
-    let lock_path: PathBuf = Text::new("Where do you want to store MindMap's lock file?")
-        .with_default(def_config.lock_path.to_str().unwrap())
         .prompt()?
         .into();
     let min_score =
@@ -106,17 +102,27 @@ pub fn setup() -> Result<()> {
             .with_error_message("Invalid input. Please enter a number.")
             .with_default(def_config.server.port)
             .prompt()?,
+        lock_path: Text::new("Where do you want to store MindMap's server lock file?")
+            .with_default(def_config.server.lock_path.to_str().unwrap())
+            .prompt()?
+            .into(),
+    };
+    let watcher = WatcherConfig {
+        lock_path: Text::new("Where do you want to store MindMap's watcher lock file?")
+            .with_default(def_config.watcher.lock_path.to_str().unwrap())
+            .prompt()?
+            .into(),
     };
 
     let config = MindmapConfig {
         data_dir,
         db_path,
         log_path,
-        lock_path,
         min_score,
         model,
         num_results,
         server,
+        watcher,
     };
     config.save()?;
 

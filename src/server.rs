@@ -4,6 +4,7 @@ use crate::{
     embeddings::Model,
     formatter::{self, OutputFormat},
     search::EmbeddingTree,
+    utils,
 };
 use anyhow::Result;
 use colored::Colorize;
@@ -106,6 +107,8 @@ impl Server {
     }
 
     pub fn start(config: &MindmapConfig) -> Result<()> {
+        utils::acquire_lock(&config.server.lock_path)?;
+
         // Get address
         let host = &config.server.host;
         let port = &config.server.port;
