@@ -5,6 +5,7 @@ edition = "2021"
 description = "Search your notes at the speed of thought"
 repository = "https://github.com/danimelchor/mindmap"
 authors = ["Daniel Melchor <dmh672@gmail.com>"]
+license = "MIT"
 license_file = "LICENSE.txt"
 readme = "README.md"
 
