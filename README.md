@@ -1,5 +1,5 @@
 # MindMap
-[![Latest version](https://img.shields.io/badge/crates.io-v0.1.0-orange)]([https://crates.io/crates/rust_bert](https://crates.io/crates/mindmap))
+[![Latest version](https://img.shields.io/badge/crates.io-v0.1.1-orange)]([https://crates.io/crates/rust_bert](https://crates.io/crates/mindmap))
 [![Documentation](https://img.shields.io/badge/docs-passing-green)](https://docs.rs/mindmap)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
